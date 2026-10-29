@@ -141,7 +141,8 @@ button:disabled { opacity: 0.4; pointer-events: none; }
   </div>
   <div class="row">
     <button class="btn-solve" id="btnSolve">🎯 Solve</button>
-    <button class="btn-ai" id="btnAI">🤖 AI Puzzle</button>
+    <button class="btn-solve" id="btnSolveMoves">👣 Moves</button>
+    <button class="btn-ai" id="btnAI">🤖 AI</button>
   </div>
 </div>
 
@@ -205,6 +206,18 @@ button:disabled { opacity: 0.4; pointer-events: none; }
   </div>
 </div>
 
+<div class="modal-overlay" id="movesModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>👣 Solve Moves</h2>
+      <button class="close-btn" id="btnCloseMovesModal">×</button>
+    </div>
+    <div id="movesSummary" style="font-size:12px;color:var(--text-muted);text-align:center;padding:8px;background:var(--surface-light);border-radius:8px;"></div>
+    <div id="movesList" style="max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:2px;"></div>
+    <button class="btn-primary" id="btnCloseMovesBottom">Tutup</button>
+  </div>
+</div>
+
 <div id="toast">Pesan</div>
 
 <script>
@@ -252,7 +265,7 @@ function cellsOf(pieces) {
 }
 
 // === VALIDASI PUZZLE ===
-function validatePuzzle(pieces) {
+function validatePuzzle(pieces, strict18) {
   if (!Array.isArray(pieces) || pieces.length === 0) return { ok: false, err: 'Puzzle kosong' };
   
   let totalCells = 0, redCount = 0, redPos = null;
@@ -277,7 +290,11 @@ function validatePuzzle(pieces) {
   }
   
   if (redCount !== 1) return { ok: false, err: 'Harus tepat 1 merah (ada ' + redCount + ')' };
-  if (totalCells > MAX_CELLS) return { ok: false, err: 'Melebihi ' + MAX_CELLS + ' cell (' + totalCells + ')' };
+  if (strict18) {
+    if (totalCells !== MAX_CELLS) return { ok: false, err: 'Harus tepat ' + MAX_CELLS + ' cell (ada ' + totalCells + ')' };
+  } else {
+    if (totalCells > MAX_CELLS) return { ok: false, err: 'Melebihi ' + MAX_CELLS + ' cell (' + totalCells + ')' };
+  }
   if (redPos[0] === 1 && redPos[1] === 3) return { ok: false, err: 'Merah sudah di target' };
   return { ok: true, totalCells };
 }
@@ -622,6 +639,46 @@ document.getElementById('btnImport').onclick = () => {
 };
 
 // === SOLVE BUTTON ===
+// === SOLVE MOVES HELPERS ===
+function levelDifficulty(levelNum) {
+  let tier, minM, maxM;
+  if (levelNum <= 10)       { tier = 'VERY EASY';   minM = 3;  maxM = 6;  }
+  else if (levelNum <= 30)  { tier = 'EASY';        minM = 5;  maxM = 10; }
+  else if (levelNum <= 70)  { tier = 'MEDIUM';      minM = 8;  maxM = 15; }
+  else if (levelNum <= 120) { tier = 'HARD';        minM = 12; maxM = 20; }
+  else if (levelNum <= 200) { tier = 'VERY HARD';   minM = 15; maxM = 25; }
+  else if (levelNum <= 300) { tier = 'EXPERT';      minM = 18; maxM = 30; }
+  else if (levelNum <= 400) { tier = 'MASTER';      minM = 22; maxM = 35; }
+  else if (levelNum <= 500) { tier = 'GRANDMASTER'; minM = 25; maxM = 40; }
+  else                      { tier = 'LEGENDARY';   minM = 28; maxM = 45; }
+  return tier + ' (' + minM + '-' + maxM + ' moves)';
+}
+
+function showSolveMoves(moves, arr) {
+  const state = arr.map(p => [...p]);
+  let html = '';
+  moves.forEach(([id, dx, dy], i) => {
+    const t = state[id][0];
+    const fromX = state[id][1], fromY = state[id][2];
+    state[id][1] += dx;
+    state[id][2] += dy;
+    const toX = state[id][1], toY = state[id][2];
+    const color = t === 'r' ? 'var(--red)' : t === 'v' ? 'var(--blue)' : t === 'h' ? 'var(--grn)' : 'var(--yel)';
+    const name = t === 'r' ? 'Merah 2x2' : t === 'v' ? 'Biru 1x2' : t === 'h' ? 'Hijau 2x1' : 'Kuning 1x1';
+    const arrow = dx === 1 ? '→' : dx === -1 ? '←' : dy === 1 ? '↓' : '↑';
+    html += `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface-light);border-radius:8px;margin-bottom:6px;border-left:4px solid ${color};">
+      <div style="font-weight:800;color:var(--text-muted);min-width:24px;font-size:14px;">${i+1}.</div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:13px;">${name} <span style="color:${color};font-size:16px;">${arrow}</span></div>
+        <div style="font-size:11px;color:var(--text-muted);">(${fromX},${fromY}) → (${toX},${toY})</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('movesList').innerHTML = html;
+  document.getElementById('movesSummary').textContent = moves.length + ' langkah optimal';
+  document.getElementById('movesModal').style.display = 'flex';
+}
+
 document.getElementById('btnSolve').onclick = () => {
   if (placedPieces.length === 0) { showToast("Papan kosong!", "error"); return; }
   const arr = placedPieces.map(p => [p.t, p.x, p.y]);
@@ -645,6 +702,30 @@ document.getElementById('btnSolve').onclick = () => {
     }
   }, 50);
 };
+
+document.getElementById('btnSolveMoves').onclick = () => {
+  if (placedPieces.length === 0) { showToast("Papan kosong!", "error"); return; }
+  const arr = placedPieces.map(p => [p.t, p.x, p.y]);
+  const v = validatePuzzle(arr);
+  if (!v.ok) { showToast("Puzzle invalid: " + v.err, "error"); return; }
+  showToast("⏳ Menghitung solusi...", "info");
+  const btn = document.getElementById('btnSolveMoves');
+  btn.disabled = true;
+  setTimeout(() => {
+    const moves = solvePuzzle(arr);
+    btn.disabled = false;
+    if (!moves) {
+      showToast("❌ Tidak ada solusi!", "error");
+    } else if (moves.length === 0) {
+      showToast("✓ Merah sudah di target", "success");
+    } else {
+      showSolveMoves(moves, arr);
+    }
+  }, 50);
+};
+
+document.getElementById('btnCloseMovesModal').onclick = () => document.getElementById('movesModal').style.display = 'none';
+document.getElementById('btnCloseMovesBottom').onclick = () => document.getElementById('movesModal').style.display = 'none';
 
 // === AI MODAL ===
 const aiModal = document.getElementById('aiModal');
@@ -774,6 +855,7 @@ RULES (MUST ALL BE TRUE):
 1. Exactly ONE "r" block
 2. "r" NOT already at position (1, 3)
 3. Total occupied cells ≤ 18 (at least 2 cells empty)
+3.1. TOTAL occupied cells MUST BE EXACTLY 18 — CRITICAL (this overrides rule 3 above)
 4. No overlaps, all blocks within bounds
 5. Puzzle MUST be solvable — red can reach (1, 3) by sliding blocks
 6. Solvable in 3-30 moves
@@ -800,8 +882,8 @@ function extractJSON(text) {
   throw new Error('Tidak bisa parse JSON dari AI');
 }
 
-async function aiGeneratePuzzle(cfg) {
-  const userPrompt = 'Generate a valid solvable puzzle. Return ONLY the JSON array.';
+async function aiGeneratePuzzle(cfg, ctx) {
+  const userPrompt = 'Generate a valid solvable puzzle for LEVEL ' + ctx.levelNumber + ' (difficulty: ' + ctx.difficulty + '). Return ONLY the JSON array.';
 
   if (cfg.provider === 'gemini') {
     const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(cfg.model) + ':generateContent?key=' + encodeURIComponent(cfg.apiKey);
@@ -851,13 +933,13 @@ async function aiGeneratePuzzle(cfg) {
   return extractJSON(text);
 }
 
-async function aiGenerateWithRetry(cfg, maxAttempts, onStatus) {
+async function aiGenerateWithRetry(cfg, ctx, maxAttempts, onStatus) {
   let lastErr;
   for (let i = 0; i < maxAttempts; i++) {
     try {
       onStatus && onStatus('⏳ Percobaan ' + (i+1) + '/' + maxAttempts + '...');
-      const parsed = await aiGeneratePuzzle(cfg);
-      const v = validatePuzzle(parsed);
+      const parsed = await aiGeneratePuzzle(cfg, ctx);
+      const v = validatePuzzle(parsed, true);
       if (!v.ok) { lastErr = new Error(v.err); continue; }
       const moves = solvePuzzle(parsed);
       if (!moves || moves.length === 0) { lastErr = new Error('Puzzle tidak solvable'); continue; }
@@ -880,10 +962,12 @@ document.getElementById('btnAIGenerate').onclick = async () => {
   }
   if (placedPieces.length > 0 && !confirm('Ganti papan saat ini dengan puzzle AI?')) return;
   
+  const levelNumber = editIndex >= 0 ? editIndex + 1 : savedLevels.length + 1;
+  const ctx = { levelNumber, difficulty: levelDifficulty(levelNumber) };
   btn.disabled = true;
-  genStatus.textContent = '⏳ Menghasilkan puzzle...';
+  genStatus.textContent = '⏳ Level ' + levelNumber + ' · ' + ctx.difficulty + '...';
   try {
-    const result = await aiGenerateWithRetry(cfg, 3, (msg) => { genStatus.textContent = msg; });
+    const result = await aiGenerateWithRetry(cfg, ctx, 3, (msg) => { genStatus.textContent = msg; });
     placedPieces = result.pieces.map(([t, x, y]) => ({ t, x, y }));
     history = []; redoStack = [];
     editIndex = -1;
