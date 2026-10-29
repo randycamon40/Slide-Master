@@ -13,6 +13,20 @@
   "lang": "id",
   "dir": "ltr",
   "categories": ["games", "puzzle"],
+  "shortcuts": [
+    {
+      "name": "Play Game",
+      "short_name": "Play",
+      "url": "./",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Level Editor",
+      "short_name": "Editor",
+      "url": "./editor.html",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ],
   "icons": [
     {
       "src": "icon-192.png",
