@@ -316,8 +316,12 @@ function validatePuzzle(pieces, strict18) {
 }
 
 // === BFS SOLVER ===
-function solvePuzzle(pieces, maxIter) {
-  maxIter = maxIter || 500000;
+let solvePuzzleTimedOut = false;
+function solvePuzzle(pieces, maxIter, maxMs) {
+  solvePuzzleTimedOut = false;
+  maxIter = maxIter || 3000000;
+  maxMs = maxMs || 10000;
+  const _solveT0 = performance.now();
   const key = s => {
     const g = Array(20).fill('.');
     s.forEach(([t,x,y]) => {
@@ -331,6 +335,10 @@ function solvePuzzle(pieces, maxIter) {
   const dirs = [[0,-1], [0,1], [-1,0], [1,0]];
   
   for (let h = 0; h < q.length && h < maxIter; h++) {
+    if ((h & 1023) === 0 && performance.now() - _solveT0 > maxMs) {
+      solvePuzzleTimedOut = true;
+      return null;
+    }
     const s = q[h].s;
     const ri = s.findIndex(p => p[0] === 'r');
     if (ri >= 0 && s[ri][1] === 1 && s[ri][2] === 3) {
@@ -661,13 +669,12 @@ function levelDifficulty(levelNum) {
   let tier, minM, maxM;
   if (levelNum <= 10)       { tier = 'VERY EASY';   minM = 3;  maxM = 6;  }
   else if (levelNum <= 30)  { tier = 'EASY';        minM = 5;  maxM = 10; }
-  else if (levelNum <= 70)  { tier = 'MEDIUM';      minM = 8;  maxM = 15; }
-  else if (levelNum <= 120) { tier = 'HARD';        minM = 12; maxM = 20; }
-  else if (levelNum <= 200) { tier = 'VERY HARD';   minM = 15; maxM = 25; }
-  else if (levelNum <= 300) { tier = 'EXPERT';      minM = 18; maxM = 30; }
-  else if (levelNum <= 400) { tier = 'MASTER';      minM = 22; maxM = 35; }
-  else if (levelNum <= 500) { tier = 'GRANDMASTER'; minM = 25; maxM = 40; }
-  else                      { tier = 'LEGENDARY';   minM = 28; maxM = 45; }
+  else if (levelNum <= 49)  { tier = 'MEDIUM';      minM = 8;  maxM = 15; }
+  else if (levelNum <= 100) { tier = 'ADVANCED';    minM = 30; maxM = 40; }
+  else if (levelNum <= 200) { tier = 'MASTER';      minM = 50; maxM = 60; }
+  else if (levelNum <= 300) { tier = 'GRANDMASTER'; minM = 70; maxM = 80; }
+  else if (levelNum <= 500) { tier = 'LEGENDARY';   minM = 90; maxM = 100; }
+  else                      { tier = 'MYTHIC';      minM = 90; maxM = 100; }
   return tier + ' (' + minM + '-' + maxM + ' moves)';
 }
 
@@ -711,7 +718,8 @@ document.getElementById('btnSolve').onclick = () => {
     const dt = performance.now() - t0;
     btn.disabled = false;
     if (!moves) {
-      showToast("❌ Tidak ada solusi!", "error");
+      if (solvePuzzleTimedOut) showToast("⏱ Terlalu kompleks (timeout)", "error");
+      else showToast("❌ Tidak ada solusi!", "error");
     } else if (moves.length === 0) {
       showToast("✓ Merah sudah di target", "success");
     } else {
@@ -732,7 +740,8 @@ document.getElementById('btnSolveMoves').onclick = () => {
     const moves = solvePuzzle(arr);
     btn.disabled = false;
     if (!moves) {
-      showToast("❌ Tidak ada solusi!", "error");
+      if (solvePuzzleTimedOut) showToast("⏱ Terlalu kompleks (timeout)", "error");
+      else showToast("❌ Tidak ada solusi!", "error");
     } else if (moves.length === 0) {
       showToast("✓ Merah sudah di target", "success");
     } else {
@@ -980,7 +989,7 @@ RULES (MUST ALL BE TRUE):
 3.1. TOTAL occupied cells MUST BE EXACTLY 18 — CRITICAL (this overrides rule 3 above)
 4. No overlaps, all blocks within bounds
 5. Puzzle MUST be solvable — red can reach (1, 3) by sliding blocks
-6. Solvable in 3-30 moves
+6. Solvable in EXACTLY the move range given in the user prompt (e.g. "30-40 moves" means solution length MUST be between 30 and 40). This overrides any default move count.
 
 OUTPUT FORMAT: Return ONLY a JSON array, no markdown, no explanation:
 [["r", 1, 1], ["v", 0, 0], ["h", 2, 4], ["y", 3, 2]]`;
@@ -1064,7 +1073,14 @@ async function aiGenerateWithRetry(cfg, ctx, maxAttempts, onStatus) {
       const v = validatePuzzle(parsed, true);
       if (!v.ok) { lastErr = new Error(v.err); continue; }
       const moves = solvePuzzle(parsed);
-      if (!moves || moves.length === 0) { lastErr = new Error('Puzzle tidak solvable'); continue; }
+      if (!moves) {
+        if (solvePuzzleTimedOut) {
+          return { pieces: parsed, moves: [], unverified: true };
+        }
+        lastErr = new Error('Puzzle tidak solvable');
+        continue;
+      }
+      if (moves.length === 0) { lastErr = new Error('Merah sudah di target'); continue; }
       if (moves.length < 3) { lastErr = new Error('Terlalu mudah (' + moves.length + ' langkah)'); continue; }
       return { pieces: parsed, moves };
     } catch(e) {
@@ -1097,7 +1113,8 @@ document.getElementById('btnAIGenerate').onclick = async () => {
     // Simpan config terakhir
     aiConfig = cfg;
     saveAIConfigStore();
-    genStatus.textContent = '✅ Sukses: ' + result.pieces.length + ' kotak, ' + result.moves.length + ' langkah solusi';
+    const moveInfo = result.unverified ? '⚠ solvability unverified (timeout)' : result.moves.length + ' langkah solusi';
+    genStatus.textContent = '✅ ' + result.pieces.length + ' kotak, ' + moveInfo;
     setTimeout(() => { aiModal.style.display = 'none'; }, 600);
     showToast("✅ Puzzle AI siap!", "success");
   } catch(e) {
