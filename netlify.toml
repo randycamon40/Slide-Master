@@ -3,14 +3,14 @@
 
 # ===== HEADERS =====
 
-# Service Worker — jangan di-cache, harus selalu fresh
+# Service Worker — selalu fresh
 [[headers]]
   for = "/sw.js"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
     Service-Worker-Allowed = "/"
 
-# Manifest — MIME type khusus + cache sedang
+# Manifest — MIME type khusus
 [[headers]]
   for = "/manifest.webmanifest"
   [headers.values]
@@ -39,7 +39,6 @@
     Permissions-Policy = "geolocation=(), microphone=(), camera=()"
 
 # ===== REDIRECTS =====
-# Fallback SPA: kalau path tidak ada, sajikan index.html
 [[redirects]]
   from = "/*"
   to = "/index.html"
