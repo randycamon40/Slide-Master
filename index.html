@@ -188,6 +188,7 @@ button.on { outline: 2px solid var(--yel); box-shadow: 0 0 12px var(--yel); }
       <button id="bRand">RANDOM LEVEL</button>
       <button id="bLevels">SELECT LEVEL</button>
       <button id="bSettings">SETTINGS</button>
+      <button id="bEdit" style="display:none;background:linear-gradient(180deg,#5cffa6,#00a050);box-shadow:0 5px 0 #004422,0 10px 20px rgba(0,0,0,0.5);border-color:#5cffa6;color:#003318;font-size:14px;font-weight:900;">✏️ EDIT LEVEL</button>
 
     </div>
     <div id="lobby-stats" style="font-size: 13px; color: #888; letter-spacing: 1px; text-align: center; z-index: 2; margin-top: 15px;">🏆 Solved: 0 · ⚡ XP: 0</div>
@@ -250,6 +251,12 @@ if(P.theme === undefined) P.theme = 0;
 if(P.lvl === undefined) P.lvl = 0;
 if(P.mode === undefined || P.mode === 'learn') P.mode = 'classic';
 S.theme = P.theme;
+
+try {
+  if (sessionStorage.getItem('ss_admin') === '1') {
+    setTimeout(showAdminUI, 0);
+  }
+} catch(_) {}
 S.mode = P.mode;
 setTimeout(() => { document.documentElement.dataset.theme = themes[S.theme]; }, 0);
 
@@ -842,6 +849,21 @@ $('#bLevels').onclick = openLevelSelect;
 document.querySelectorAll('.mode-btn').forEach(b => b.onclick = () => setLobbyMode(b.dataset.mode, true));
 setLobbyMode(S.mode, false);
 
+function showAdminUI() {
+  isAdmin = true;
+  $('#adminBtn').classList.add('on');
+  $('#adminBtn').textContent = '🔓';
+  $('#tools').style.display = '';
+  $('#bEdit').style.display = '';
+}
+function hideAdminUI() {
+  isAdmin = false;
+  $('#adminBtn').classList.remove('on');
+  $('#adminBtn').textContent = '🔒';
+  $('#tools').style.display = 'none';
+  $('#bEdit').style.display = 'none';
+}
+
 function adminLogin() {
   const o = $('#ov');
   o.innerHTML = `<h2 style="font-size:22px;letter-spacing:2px;margin:0 0 6px">🔐 ADMIN LOGIN</h2>
@@ -856,10 +878,8 @@ function adminLogin() {
   btnNo.textContent = 'CANCEL';
   const submit = () => {
     if(pwd.value === '170845') {
-      isAdmin = true;
-      $('#adminBtn').classList.add('on');
-      $('#adminBtn').textContent = '🔓';
-      $('#tools').style.display = '';
+      showAdminUI();
+      try { sessionStorage.setItem('ss_admin', '1'); } catch(_) {}
       o.hidden = true;
       tone(660,.1); tone(880,.15,.1);
     } else {
@@ -876,10 +896,8 @@ function adminLogin() {
   setTimeout(() => { try { pwd.focus(); } catch(_) {} }, 60);
 }
 function adminLogout() {
-  isAdmin = false;
-  $('#adminBtn').classList.remove('on');
-  $('#adminBtn').textContent = '🔒';
-  $('#tools').style.display = 'none';
+  hideAdminUI();
+  try { sessionStorage.removeItem('ss_admin'); } catch(_) {}
   tone(300,.1);
 }
 $('#adminBtn').onclick = () => isAdmin ? adminLogout() : adminLogin();
@@ -897,6 +915,18 @@ $('#bS').onclick = () => {
       move(...mv[i++]);
     }, 300);
   });
+};
+$('#bEdit').onclick = () => {
+  try {
+    safeSetSS(JSON.stringify({
+      lvl: S.lvl,
+      bl: S.bl.map(b => [b.t, b.x, b.y]),
+      moves: S.moves,
+      hist: S.hist
+    }));
+  } catch(_) {}
+  try { sessionStorage.setItem('ss_admin', '1'); } catch(_) {}
+  window.location.href = 'editor.html';
 };
 $('#bSettings').onclick = () => {
   const o = $('#ov');
@@ -1030,6 +1060,15 @@ fetch('level.json')
   .then(res => res.json())
   .then(data => {
     LEVELS = data;
+    if (isAdmin) {
+      try {
+        const custom = JSON.parse(localStorage.getItem('slide_master_levels') || '[]');
+        if (Array.isArray(custom) && custom.length > 0) {
+          LEVELS = custom;
+          console.log('[Admin] Pakai ' + custom.length + ' level dari editor');
+        }
+      } catch(_) {}
+    }
     load(P.lvl || 0);
     updateLobbyStats();
   })
