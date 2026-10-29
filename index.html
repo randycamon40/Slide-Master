@@ -371,6 +371,7 @@ S.theme = P.theme;
 
 try {
   if (localStorage.getItem('ss_admin') === '1') {
+    isAdmin = true;
     setTimeout(showAdminUI, 0);
   }
 } catch(_) {}
@@ -1660,6 +1661,14 @@ fetch('level.json')
       ["y",2,1], ["y",3,1], ["y",0,2], ["y",1,2], 
       ["y",2,2], ["y",3,2], ["y",3,3], ["y",3,4]
     ]];
+    if (isAdmin) {
+      try {
+        const custom = JSON.parse(localStorage.getItem('slide_master_levels') || '[]');
+        if (Array.isArray(custom) && custom.length > 0) {
+          LEVELS = custom;
+        }
+      } catch(_) {}
+    }
     load(P.lvl || 0);
     updateLobbyStats();
     if(!P.tutDone) setTimeout(showTutorial, 600);
