@@ -1,5 +1,5 @@
 // Service Worker — Slide Master
-const CACHE_VERSION = 'v1.1.0';
+const CACHE_VERSION = 'v1.2.0';
 const CACHE_NAME = 'slide-master-' + CACHE_VERSION;
 
 const PRECACHE = [
