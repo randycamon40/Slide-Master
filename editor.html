@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Pro Level Editor - Slide Master</title>
+<style>
+:root {
+  --bg: #121212; --surface: #1e1e1e; --surface-light: #2a2a2a;
+  --text: #e0e0e0; --text-muted: #888;
+  --red: #FF3B42; --blue: #00B4FF; --yel: #FFCC00; --grn: #00E676;
+  --primary: #4CAF50; --danger: #f44336; --info: #2196F3;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: manipulation; font-family: system-ui, -apple-system, sans-serif; }
+body { margin: 0; padding: 15px; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+
+/* Header */
+.header { width: 100%; max-width: 340px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.header h1 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 1px; color: var(--text); }
+.header .stats { font-size: 11px; color: var(--text-muted); background: var(--surface); padding: 6px 10px; border-radius: 6px; }
+
+/* Papan Grid (Posisi Presisi) */
+#board-wrapper { width: 100%; max-width: 340px; padding: 10px; background: var(--surface); border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); margin-bottom: 20px; }
+#grid { 
+  --pad: 8px;
+  --gap: 4px;
+  --cell-w: calc((100% - (2 * var(--pad)) - (3 * var(--gap))) / 4);
+  --cell-h: calc((100% - (2 * var(--pad)) - (4 * var(--gap))) / 5);
+  
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); 
+  background: #0a0a0a; padding: var(--pad); border-radius: 12px; 
+  width: 100%; aspect-ratio: 4/5; position: relative;
+  border: 1px solid #333; box-shadow: inset 0 4px 10px rgba(0,0,0,0.8);
+}
+.cell { background: rgba(255,255,255,0.05); border-radius: 6px; cursor: pointer; }
+.piece { 
+  position: absolute; border-radius: 6px; pointer-events: none; 
+  box-shadow: inset 0 3px 5px rgba(255,255,255,0.3), inset 0 -3px 5px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+  transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275); animation: pop-in 0.2s ease-out;
+}
+@keyframes pop-in { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.t_r { background: var(--red); color: rgba(0,0,0,0.2); }
+.t_v { background: var(--blue); color: rgba(0,0,0,0.2); }
+.t_h { background: var(--grn); color: rgba(0,0,0,0.2); }
+.t_y { background: var(--yel); color: rgba(0,0,0,0.2); }
+
+/* Toolbar */
+.toolbar { width: 100%; max-width: 340px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px; }
+.tool-btn { 
+  width: 58px; height: 58px; border-radius: 12px; border: 2px solid transparent; 
+  display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 800; font-size: 10px; color: #000;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.6); cursor: pointer; transition: all 0.1s; line-height: 1.2; text-align: center;
+}
+.tool-btn.active { border-color: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.5), 0 2px 0 rgba(0,0,0,0.6); transform: translateY(2px); }
+.tool-btn[data-type="r"] { background: var(--red); width: 72px; }
+.tool-btn[data-type="v"] { background: var(--blue); }
+.tool-btn[data-type="h"] { background: var(--grn); width: 72px; }
+.tool-btn[data-type="y"] { background: var(--yel); }
+.tool-btn[data-type="x"] { background: var(--surface-light); color: #fff; border-color: #444; }
+
+/* Controls */
+.controls { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; }
+.row { display: flex; gap: 10px; width: 100%; }
+button { flex: 1; padding: 14px 10px; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; transition: opacity 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+button:active { opacity: 0.8; transform: scale(0.98); }
+button:disabled { opacity: 0.4; pointer-events: none; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-info { background: var(--info); color: white; }
+.btn-dark { background: var(--surface-light); color: white; border: 1px solid #444; }
+
+/* Modal List Level */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 100; display: none; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
+.modal-content { width: 100%; max-width: 340px; background: var(--surface); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
+.modal-header h2 { margin: 0; font-size: 16px; }
+.close-btn { background: transparent; border: none; color: var(--text-muted); font-size: 24px; padding: 0; box-shadow: none; width: auto; cursor: pointer; }
+
+.level-list { display: flex; flex-direction: column; gap: 10px; max-height: 50vh; overflow-y: auto; padding-right: 5px; }
+.level-item { background: var(--surface-light); padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 15px; border: 1px solid #333; }
+.mini-grid { width: 50px; height: 62.5px; background: #0a0a0a; border-radius: 6px; position: relative; flex-shrink: 0; border: 1px solid #444; }
+.mini-piece { position: absolute; border-radius: 2px; }
+.level-info { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.level-title { font-weight: bold; font-size: 14px; }
+.level-actions { display: flex; gap: 5px; }
+.action-btn { padding: 6px 10px; font-size: 12px; border-radius: 6px; box-shadow: none; flex: initial; }
+
+/* Toast Notification */
+#toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: #333; color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 200; box-shadow: 0 5px 15px rgba(0,0,0,0.5); white-space: nowrap; }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.error { background: var(--danger); }
+#toast.success { background: var(--primary); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>LEVEL EDITOR</h1>
+  <div class="stats" id="stats">Levels: 0 | Empty: 20</div>
+</div>
+
+<div id="board-wrapper">
+  <div id="grid"></div>
+</div>
+
+<div class="toolbar">
+  <div class="tool-btn active" data-type="r">MERAH<br>2x2</div>
+  <div class="tool-btn" data-type="v">BIRU<br>1x2</div>
+  <div class="tool-btn" data-type="h">HIJAU<br>2x1</div>
+  <div class="tool-btn" data-type="y">KUNING<br>1x1</div>
+  <div class="tool-btn" data-type="x">HAPUS<br>🗑️</div>
+</div>
+
+<div class="controls">
+  <div class="row">
+    <button class="btn-dark" id="btnUndo" disabled>↩ Undo</button>
+    <button class="btn-dark" id="btnRedo" disabled>↪ Redo</button>
+    <button class="btn-danger" id="btnClear">🗑️ Clear</button>
+  </div>
+  <div class="row">
+    <button class="btn-primary" id="btnSave" style="flex: 2;">💾 Simpan Level</button>
+    <button class="btn-info" id="btnOpenList" style="flex: 1;">📋 List (0)</button>
+  </div>
+  <div class="row">
+    <button class="btn-dark" id="btnImport" style="font-size: 11px;">📥 Import JSON</button>
+    <button class="btn-dark" id="btnExport" style="font-size: 11px;">📤 Export JSON</button>
+  </div>
+</div>
+
+<!-- Modal List Level -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Daftar Level Tersimpan</h2>
+      <button class="close-btn" id="btnCloseModal">×</button>
+    </div>
+    <div class="level-list" id="levelListContainer"></div>
+    <button class="btn-primary" id="btnCreateNew">+ Buat Level Baru</button>
+  </div>
+</div>
+
+<!-- Toast Notif -->
+<div id="toast">Pesan</div>
+
+<script>
+// === KONFIGURASI ===
+const DIM = { r:[2,2], v:[1,2], h:[2,1], y:[1,1] };
+const TOTAL_CELLS = 20;
+
+// === STATE ===
+let currentTool = 'r';
+let placedPieces = [];
+let savedLevels = [];
+let editIndex = -1; 
+let history = [];
+let redoStack = [];
+
+// === INITIALIZATION ===
+function init() {
+  const stored = localStorage.getItem('slide_master_levels');
+  if (stored) {
+    try { savedLevels = JSON.parse(stored); } catch(e) {}
+  }
+
+  const gridEl = document.getElementById('grid');
+  gridEl.innerHTML = '';
+  for(let y=0; y<5; y++) {
+    for(let x=0; x<4; x++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.x = x;
+      cell.dataset.y = y;
+      cell.addEventListener('pointerdown', handlePlace);
+      gridEl.appendChild(cell);
+    }
+  }
+
+  document.querySelectorAll('.tool-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTool = btn.dataset.type;
+    });
+  });
+
+  updateUI();
+}
+
+// === LOGIKA INTERAKSI ===
+function handlePlace(e) {
+  const x = parseInt(e.target.dataset.x);
+  const y = parseInt(e.target.dataset.y);
+  if(isNaN(x) || isNaN(y)) return;
+
+  if(currentTool === 'x') {
+    const idx = placedPieces.findIndex(p => x >= p.x && x < p.x+DIM[p.t][0] && y >= p.y && y < p.y+DIM[p.t][1]);
+    if(idx !== -1) {
+      saveHistory();
+      placedPieces.splice(idx, 1);
+      renderBoard();
+    }
+    return;
+  }
+
+  const w = DIM[currentTool][0];
+  const h = DIM[currentTool][1];
+
+  if(x + w > 4 || y + h > 5) {
+    showToast("Kotak keluar batas!", "error"); return;
+  }
+
+  const isOverlap = placedPieces.some(p => {
+    const pw = DIM[p.t][0], ph = DIM[p.t][1];
+    return (x < p.x + pw && x + w > p.x && y < p.y + ph && y + h > p.y);
+  });
+
+  if(isOverlap) {
+    showToast("Bentrok dengan kotak lain!", "error"); return;
+  }
+
+  saveHistory();
+  placedPieces.push({ t: currentTool, x, y });
+  renderBoard();
+}
+
+// === RENDER UI ===
+function renderBoard() {
+  document.querySelectorAll('.piece').forEach(el => el.remove());
+
+  placedPieces.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'piece t_' + p.t;
+    const w = DIM[p.t][0];
+    const h = DIM[p.t][1];
+    
+    div.style.width = `calc(${w} * var(--cell-w) + ${w - 1} * var(--gap))`;
+    div.style.height = `calc(${h} * var(--cell-h) + ${h - 1} * var(--gap))`;
+    div.style.left = `calc(var(--pad) + ${p.x} * (var(--cell-w) + var(--gap)))`;
+    div.style.top = `calc(var(--pad) + ${p.y} * (var(--cell-h) + var(--gap)))`;
+    
+    if(p.t === 'r') div.textContent = '▲';
+    if(p.t === 'v') div.textContent = '⏺';
+    if(p.t === 'h') div.textContent = '⬛';
+    if(p.t === 'y') div.textContent = '●';
+    
+    document.getElementById('grid').appendChild(div);
+  });
+
+  updateUI();
+}
+
+function updateUI() {
+  document.getElementById('stats').textContent = `Levels: ${savedLevels.length} | Empty: ${TOTAL_CELLS - placedPieces.length}`;
+  document.getElementById('btnUndo').disabled = history.length === 0;
+  document.getElementById('btnRedo').disabled = redoStack.length === 0;
+  document.getElementById('btnSave').textContent = editIndex >= 0 ? '🔄 Update Level' : '💾 Simpan Level';
+  document.getElementById('btnOpenList').textContent = `📋 List (${savedLevels.length})`;
+}
+
+// === HISTORY (UNDO / REDO) ===
+function saveHistory() {
+  history.push(JSON.stringify(placedPieces));
+  redoStack = [];
+}
+document.getElementById('btnUndo').onclick = () => {
+  if(history.length > 0) {
+    redoStack.push(JSON.stringify(placedPieces));
+    placedPieces = JSON.parse(history.pop());
+    renderBoard();
+  }
+};
+document.getElementById('btnRedo').onclick = () => {
+  if(redoStack.length > 0) {
+    history.push(JSON.stringify(placedPieces));
+    placedPieces = JSON.parse(redoStack.pop());
+    renderBoard();
+  }
+};
+
+// === SIMPAN & CLEAR ===
+document.getElementById('btnClear').onclick = () => {
+  if(placedPieces.length > 0 && confirm("Hapus semua kotak di papan?")) {
+    saveHistory();
+    placedPieces = [];
+    renderBoard();
+  }
+};
+
+document.getElementById('btnSave').onclick = () => {
+  const hasRed = placedPieces.some(p => p.t === 'r');
+  if(!hasRed) {
+    showToast("Level harus punya 1 kotak Merah!", "error"); return;
+  }
+
+  if(placedPieces.length > 18) {
+    showToast("Minimal harus ada 2 ruang kosong!", "error"); return;
+  }
+
+  placedPieces.sort((a, b) => (a.t === 'r' ? -1 : (b.t === 'r' ? 1 : 0)));
+  const levelData = placedPieces.map(p => [p.t, p.x, p.y]);
+
+  if(editIndex >= 0) {
+    savedLevels[editIndex] = levelData;
+    showToast("Level berhasil diperbarui!", "success");
+  } else {
+    savedLevels.push(levelData);
+    showToast("Level baru berhasil disimpan!", "success");
+  }
+
+  localStorage.setItem('slide_master_levels', JSON.stringify(savedLevels));
+  
+  placedPieces = [];
+  editIndex = -1;
+  history = [];
+  renderBoard();
+  renderLevelList();
+};
+
+// === MODAL & DAFTAR LEVEL ===
+const modal = document.getElementById('modalOverlay');
+document.getElementById('btnOpenList').onclick = () => {
+  renderLevelList();
+  modal.style.display = 'flex';
+};
+document.getElementById('btnCloseModal').onclick = () => modal.style.display = 'none';
+document.getElementById('btnCreateNew').onclick = () => {
+  placedPieces = []; editIndex = -1; history = []; renderBoard(); modal.style.display = 'none';
+};
+
+function renderLevelList() {
+  const container = document.getElementById('levelListContainer');
+  container.innerHTML = '';
+
+  if(savedLevels.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Belum ada level tersimpan.</div>';
+    return;
+  }
+
+  savedLevels.forEach((lvl, idx) => {
+    const div = document.createElement('div');
+    div.className = 'level-item';
+
+    const mini = document.createElement('div');
+    mini.className = 'mini-grid';
+    lvl.forEach(p => {
+      const mp = document.createElement('div');
+      mp.className = 'mini-piece';
+      mp.style.background = `var(--${p[0] === 'r' ? 'red' : p[0] === 'v' ? 'blue' : p[0] === 'h' ? 'grn' : 'yel'})`;
+      mp.style.width = (DIM[p[0]][0] * 25) + '%';
+      mp.style.height = (DIM[p[0]][1] * 20) + '%';
+      mp.style.left = (p[1] * 25) + '%';
+      mp.style.top = (p[2] * 20) + '%';
+      mini.appendChild(mp);
+    });
+
+    const info = document.createElement('div');
+    info.className = 'level-info';
+    info.innerHTML = `<div class="level-title">Level ${idx + 1}</div>`;
+    
+    const actions = document.createElement('div');
+    actions.className = 'level-actions';
+    
+    const btnEdit = document.createElement('button');
+    btnEdit.className = 'action-btn btn-info';
+    btnEdit.textContent = '✏️ Edit';
+    btnEdit.onclick = () => {
+      placedPieces = lvl.map(p => ({ t: p[0], x: p[1], y: p[2] }));
+      editIndex = idx;
+      history = []; redoStack = [];
+      renderBoard();
+      modal.style.display = 'none';
+    };
+
+    const btnDel = document.createElement('button');
+    btnDel.className = 'action-btn btn-danger';
+    btnDel.textContent = '🗑️';
+    btnDel.onclick = () => {
+      if(confirm(`Hapus Level ${idx + 1}?`)) {
+        savedLevels.splice(idx, 1);
+        localStorage.setItem('slide_master_levels', JSON.stringify(savedLevels));
+        if(editIndex === idx) { placedPieces = []; editIndex = -1; renderBoard(); }
+        renderLevelList();
+        updateUI();
+      }
+    };
+
+    actions.appendChild(btnEdit);
+    actions.appendChild(btnDel);
+    info.appendChild(actions);
+
+    div.appendChild(mini);
+    div.appendChild(info);
+    container.appendChild(div);
+  });
+}
+
+// === FORMATTER JSON (Agar Rapi) ===
+function formatCleanJSON(levels) {
+  let out = "[\n";
+  levels.forEach((lvl, i) => {
+    out += "  [\n    ";
+    out += lvl.map(p => `["${p[0]}", ${p[1]}, ${p[2]}]`).join(", ");
+    out += "\n  ]";
+    if (i < levels.length - 1) out += ",";
+    out += "\n";
+  });
+  out += "]";
+  return out;
+}
+
+// === IMPORT / EXPORT ===
+document.getElementById('btnExport').onclick = () => {
+  if(savedLevels.length === 0) { showToast("Belum ada level untuk di-export", "error"); return; }
+  
+  // Gunakan formatter khusus agar rapi
+  const jsonText = formatCleanJSON(savedLevels);
+  
+  const blob = new Blob([jsonText], {type: "application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "level.json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  navigator.clipboard.writeText(jsonText).then(() => {
+    showToast("File didownload & JSON dicopy!", "success");
+  }).catch(() => {
+    showToast("File berhasil didownload!", "success");
+  });
+};
+
+document.getElementById('btnImport').onclick = () => {
+  const input = prompt("Paste kode JSON di sini:");
+  if(!input) return;
+  try {
+    const parsed = JSON.parse(input);
+    if(Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
+      if(confirm("Ganti semua level saat ini dengan data import?")) {
+        savedLevels = parsed;
+        localStorage.setItem('slide_master_levels', JSON.stringify(savedLevels));
+        renderLevelList();
+        updateUI();
+        showToast("Import berhasil!", "success");
+      }
+    } else {
+      showToast("Format JSON tidak valid!", "error");
+    }
+  } catch(e) {
+    showToast("Gagal membaca JSON!", "error");
+  }
+};
+
+// === TOAST NOTIFIKASI ===
+let toastTimeout;
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => { t.className = ''; }, 2500);
+}
+
+// Jalankan App
+init();
+</script>
+</body>
+</html>
