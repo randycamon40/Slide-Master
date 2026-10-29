@@ -1,10 +1,11 @@
 // Service Worker — Slide Master
-const CACHE_VERSION = 'v1.0.0';
+const CACHE_VERSION = 'v1.1.0';
 const CACHE_NAME = 'slide-master-' + CACHE_VERSION;
 
 const PRECACHE = [
   './',
   './index.html',
+  './editor.html',
   './level.json',
   './manifest.webmanifest',
   './icon-192.png',
@@ -39,14 +40,12 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
-
-  // Hanya tangani request same-origin
   if (url.origin !== self.location.origin) return;
 
-  // Network-first untuk HTML navigation & level.json (agar update langsung terlihat)
   const isNavigation = req.mode === 'navigate';
   const isLevelJson = url.pathname.endsWith('/level.json');
 
+  // Network-first: HTML navigation & level.json (biar update cepat terlihat)
   if (isNavigation || isLevelJson) {
     event.respondWith(
       fetch(req)
@@ -64,11 +63,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first untuk aset statis (icon, manifest, dll)
+  // Cache-first untuk aset statis
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) {
-        // Revalidate di background
         fetch(req)
           .then((res) => {
             if (res && res.ok) {
@@ -92,7 +90,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// ===== MESSAGE (untuk skipWaiting dari client) =====
+// ===== MESSAGE =====
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
