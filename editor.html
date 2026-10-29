@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#121212">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Pro Level Editor - Slide Master</title>
 <style>
 :root {
@@ -15,18 +18,18 @@
 body { margin: 0; padding: 15px; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
 
 /* Header */
-.header { width: 100%; max-width: 340px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.header { width: 100%; max-width: 340px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 8px; }
 .header h1 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 1px; color: var(--text); }
 .header .stats { font-size: 11px; color: var(--text-muted); background: var(--surface); padding: 6px 10px; border-radius: 6px; }
+.header .back-btn { font-size: 11px; color: var(--text-muted); text-decoration: none; padding: 6px 10px; background: var(--surface); border-radius: 6px; }
 
-/* Papan Grid (Posisi Presisi) */
+/* Papan Grid */
 #board-wrapper { width: 100%; max-width: 340px; padding: 10px; background: var(--surface); border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); margin-bottom: 20px; }
 #grid { 
   --pad: 8px;
   --gap: 4px;
   --cell-w: calc((100% - (2 * var(--pad)) - (3 * var(--gap))) / 4);
   --cell-h: calc((100% - (2 * var(--pad)) - (4 * var(--gap))) / 5);
-  
   display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); 
   background: #0a0a0a; padding: var(--pad); border-radius: 12px; 
   width: 100%; aspect-ratio: 4/5; position: relative;
@@ -69,8 +72,10 @@ button:disabled { opacity: 0.4; pointer-events: none; }
 .btn-danger { background: var(--danger); color: white; }
 .btn-info { background: var(--info); color: white; }
 .btn-dark { background: var(--surface-light); color: white; border: 1px solid #444; }
+.btn-ai { background: linear-gradient(135deg, #a855f7, #6366f1); color: white; }
+.btn-solve { background: linear-gradient(135deg, #f59e0b, #f97316); color: #1a1a1a; font-weight: 900; }
 
-/* Modal List Level */
+/* Modal */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 100; display: none; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
 .modal-content { width: 100%; max-width: 340px; background: var(--surface); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
 .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
@@ -86,18 +91,26 @@ button:disabled { opacity: 0.4; pointer-events: none; }
 .level-actions { display: flex; gap: 5px; }
 .action-btn { padding: 6px 10px; font-size: 12px; border-radius: 6px; box-shadow: none; flex: initial; }
 
-/* Toast Notification */
-#toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: #333; color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 200; box-shadow: 0 5px 15px rgba(0,0,0,0.5); white-space: nowrap; }
+/* Form fields */
+.fld { display: flex; flex-direction: column; gap: 5px; }
+.fld label { font-size: 12px; color: var(--text-muted); }
+.fld input, .fld select, .fld textarea { padding: 10px; border-radius: 8px; background: var(--surface-light); color: var(--text); border: 1px solid #444; font-size: 13px; font-family: inherit; }
+.fld input:focus, .fld select:focus { outline: 1px solid var(--info); }
+
+/* Toast */
+#toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: #333; color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 200; box-shadow: 0 5px 15px rgba(0,0,0,0.5); max-width: 90vw; text-align: center; }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 #toast.error { background: var(--danger); }
 #toast.success { background: var(--primary); }
+#toast.info { background: var(--info); }
 </style>
 </head>
 <body>
 
 <div class="header">
   <h1>LEVEL EDITOR</h1>
-  <div class="stats" id="stats">Levels: 0 | Empty: 20</div>
+  <div class="stats" id="stats">Levels: 0 | Cells: 0/18</div>
+  <a href="index.html" class="back-btn">← Game</a>
 </div>
 
 <div id="board-wrapper">
@@ -126,9 +139,13 @@ button:disabled { opacity: 0.4; pointer-events: none; }
     <button class="btn-dark" id="btnImport" style="font-size: 11px;">📥 Import JSON</button>
     <button class="btn-dark" id="btnExport" style="font-size: 11px;">📤 Export JSON</button>
   </div>
+  <div class="row">
+    <button class="btn-solve" id="btnSolve">🎯 Solve</button>
+    <button class="btn-ai" id="btnAI">🤖 AI Puzzle</button>
+  </div>
 </div>
 
-<!-- Modal List Level -->
+<!-- Modal Daftar Level -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal-content">
     <div class="modal-header">
@@ -140,33 +157,206 @@ button:disabled { opacity: 0.4; pointer-events: none; }
   </div>
 </div>
 
-<!-- Toast Notif -->
+<!-- Modal AI -->
+<div class="modal-overlay" id="aiModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>🤖 AI Puzzle Generator</h2>
+      <button class="close-btn" id="btnCloseAIModal">×</button>
+    </div>
+    
+    <div class="fld">
+      <label>Provider</label>
+      <select id="aiProvider">
+        <option value="openai">OpenAI</option>
+        <option value="gemini">Google Gemini</option>
+        <option value="groq">Groq</option>
+        <option value="openrouter">OpenRouter</option>
+        <option value="custom">Custom (OpenAI-compatible)</option>
+      </select>
+    </div>
+    
+    <div class="fld">
+      <label>Model</label>
+      <input id="aiModel" type="text" placeholder="gpt-4o-mini" autocomplete="off">
+    </div>
+    
+    <div class="fld">
+      <label>API Key</label>
+      <input id="aiApiKey" type="password" placeholder="sk-..." autocomplete="off">
+    </div>
+    
+    <div class="fld" id="aiBaseUrlWrap" style="display:none;">
+      <label>Base URL</label>
+      <input id="aiBaseUrl" type="text" placeholder="https://api.example.com/v1/chat/completions" autocomplete="off">
+    </div>
+    
+    <div class="row" style="margin-top:6px;">
+      <button class="btn-info" id="btnAITest" style="font-size:12px;">🔌 Test</button>
+      <button class="btn-primary" id="btnAISave" style="font-size:12px;">💾 Save</button>
+    </div>
+    
+    <div id="aiStatus" style="font-size:12px;padding:10px 12px;border-radius:8px;background:var(--surface-light);text-align:center;color:var(--text-muted);">⚪ Belum dites</div>
+    
+    <hr style="border:none;border-top:1px solid #333;margin:4px 0;">
+    
+    <button class="btn-ai" id="btnAIGenerate" style="padding:16px;font-size:14px;font-weight:900;">🎲 Generate Puzzle</button>
+    <div id="aiGenStatus" style="font-size:11px;color:var(--text-muted);text-align:center;">Klik untuk generate puzzle dengan AI</div>
+  </div>
+</div>
+
 <div id="toast">Pesan</div>
 
 <script>
 // === KONFIGURASI ===
 const DIM = { r:[2,2], v:[1,2], h:[2,1], y:[1,1] };
 const TOTAL_CELLS = 20;
+const MAX_CELLS = 18; // 2 cell harus kosong
+const AI_CONFIG_KEY = 'slide_master_ai_config';
 
 // === STATE ===
 let currentTool = 'r';
 let placedPieces = [];
 let savedLevels = [];
-let editIndex = -1; 
+let editIndex = -1;
 let history = [];
 let redoStack = [];
 
-// === INITIALIZATION ===
-function init() {
+let aiConfig = { provider: 'openai', model: 'gpt-4o-mini', apiKey: '', baseURL: '' };
+
+// === AI CONFIG ===
+function loadAIConfig() {
+  try {
+    const c = JSON.parse(localStorage.getItem(AI_CONFIG_KEY) || '{}');
+    aiConfig = Object.assign({ provider: 'openai', model: 'gpt-4o-mini', apiKey: '', baseURL: '' }, c);
+  } catch(_) {}
+}
+function saveAIConfigStore() {
+  try { localStorage.setItem(AI_CONFIG_KEY, JSON.stringify(aiConfig)); } catch(_) {}
+}
+function readAIForm() {
+  return {
+    provider: document.getElementById('aiProvider').value,
+    model: document.getElementById('aiModel').value.trim(),
+    apiKey: document.getElementById('aiApiKey').value.trim(),
+    baseURL: document.getElementById('aiBaseUrl').value.trim()
+  };
+}
+
+// === UTIL ===
+function cellsOf(pieces) {
+  return pieces.reduce((sum, p) => {
+    const d = Array.isArray(p) ? DIM[p[0]] : DIM[p.t];
+    return sum + d[0] * d[1];
+  }, 0);
+}
+
+// === VALIDASI PUZZLE ===
+function validatePuzzle(pieces) {
+  if (!Array.isArray(pieces) || pieces.length === 0) return { ok: false, err: 'Puzzle kosong' };
+  
+  let totalCells = 0, redCount = 0, redPos = null;
+  const grid = Array(20).fill(-1);
+  
+  for (let i = 0; i < pieces.length; i++) {
+    const p = pieces[i];
+    if (!Array.isArray(p) || p.length !== 3) return { ok: false, err: 'Format piece #' + (i+1) + ' salah' };
+    const t = p[0];
+    if (!DIM[t]) return { ok: false, err: 'Tipe tidak dikenal: ' + t };
+    const [w, h] = DIM[t];
+    const x = p[1], y = p[2];
+    if (typeof x !== 'number' || typeof y !== 'number') return { ok: false, err: 'Koordinat bukan angka' };
+    if (x < 0 || y < 0 || x + w > 4 || y + h > 5) return { ok: false, err: 'Keluar batas: ' + t + ' (' + x + ',' + y + ')' };
+    for (let dx = 0; dx < w; dx++) for (let dy = 0; dy < h; dy++) {
+      const idx = (y + dy) * 4 + (x + dx);
+      if (grid[idx] !== -1) return { ok: false, err: 'Overlap di (' + (x+dx) + ',' + (y+dy) + ')' };
+      grid[idx] = i;
+    }
+    totalCells += w * h;
+    if (t === 'r') { redCount++; redPos = [x, y]; }
+  }
+  
+  if (redCount !== 1) return { ok: false, err: 'Harus tepat 1 merah (ada ' + redCount + ')' };
+  if (totalCells > MAX_CELLS) return { ok: false, err: 'Melebihi ' + MAX_CELLS + ' cell (' + totalCells + ')' };
+  if (redPos[0] === 1 && redPos[1] === 3) return { ok: false, err: 'Merah sudah di target' };
+  return { ok: true, totalCells };
+}
+
+// === BFS SOLVER ===
+function solvePuzzle(pieces, maxIter) {
+  maxIter = maxIter || 500000;
+  const key = s => {
+    const g = Array(20).fill('.');
+    s.forEach(([t,x,y]) => {
+      const [w,h] = DIM[t];
+      for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) g[(y+j)*4 + x+i] = t;
+    });
+    return g.join('');
+  };
+  const seen = new Set([key(pieces)]);
+  const q = [{ s: pieces, p: -1, m: null }];
+  const dirs = [[0,-1], [0,1], [-1,0], [1,0]];
+  
+  for (let h = 0; h < q.length && h < maxIter; h++) {
+    const s = q[h].s;
+    const ri = s.findIndex(p => p[0] === 'r');
+    if (ri >= 0 && s[ri][1] === 1 && s[ri][2] === 3) {
+      const mv = [];
+      for (let i = h; q[i].p >= 0; i = q[i].p) mv.push(q[i].m);
+      return mv.reverse();
+    }
+    const o = Array(20).fill(-1);
+    s.forEach(([t,x,y], id) => {
+      const [w,hh] = DIM[t];
+      for (let i = 0; i < w; i++) for (let j = 0; j < hh; j++) o[(y+j)*4 + x+i] = id;
+    });
+    s.forEach(([t,x,y], id) => {
+      const [w,hh] = DIM[t];
+      dirs.forEach(([dx,dy]) => {
+        const nx = x + dx, ny = y + dy;
+        if (nx < 0 || ny < 0 || nx+w > 4 || ny+hh > 5) return;
+        for (let i = 0; i < w; i++) for (let j = 0; j < hh; j++) {
+          const v = o[(ny+j)*4 + nx+i];
+          if (v !== -1 && v !== id) return;
+        }
+        const ns = s.slice();
+        ns[id] = [t, nx, ny];
+        const k = key(ns);
+        if (!seen.has(k)) {
+          seen.add(k);
+          q.push({ s: ns, p: h, m: [id, dx, dy] });
+        }
+      });
+    });
+  }
+  return null;
+}
+
+// === INIT ===
+async function init() {
+  loadAIConfig();
+
   const stored = localStorage.getItem('slide_master_levels');
   if (stored) {
     try { savedLevels = JSON.parse(stored); } catch(e) {}
   }
+  if (savedLevels.length === 0) {
+    try {
+      const res = await fetch('level.json', { cache: 'no-cache' });
+      if (res.ok) {
+        savedLevels = await res.json();
+        localStorage.setItem('slide_master_levels', JSON.stringify(savedLevels));
+        console.log('Loaded ' + savedLevels.length + ' level dari level.json');
+      }
+    } catch(e) {
+      console.warn('Gagal load level.json', e);
+    }
+  }
 
   const gridEl = document.getElementById('grid');
   gridEl.innerHTML = '';
-  for(let y=0; y<5; y++) {
-    for(let x=0; x<4; x++) {
+  for (let y = 0; y < 5; y++) {
+    for (let x = 0; x < 4; x++) {
       const cell = document.createElement('div');
       cell.className = 'cell';
       cell.dataset.x = x;
@@ -187,15 +377,15 @@ function init() {
   updateUI();
 }
 
-// === LOGIKA INTERAKSI ===
+// === PLACE ===
 function handlePlace(e) {
   const x = parseInt(e.target.dataset.x);
   const y = parseInt(e.target.dataset.y);
-  if(isNaN(x) || isNaN(y)) return;
+  if (isNaN(x) || isNaN(y)) return;
 
-  if(currentTool === 'x') {
-    const idx = placedPieces.findIndex(p => x >= p.x && x < p.x+DIM[p.t][0] && y >= p.y && y < p.y+DIM[p.t][1]);
-    if(idx !== -1) {
+  if (currentTool === 'x') {
+    const idx = placedPieces.findIndex(p => x >= p.x && x < p.x + DIM[p.t][0] && y >= p.y && y < p.y + DIM[p.t][1]);
+    if (idx !== -1) {
       saveHistory();
       placedPieces.splice(idx, 1);
       renderBoard();
@@ -203,20 +393,21 @@ function handlePlace(e) {
     return;
   }
 
-  const w = DIM[currentTool][0];
-  const h = DIM[currentTool][1];
-
-  if(x + w > 4 || y + h > 5) {
-    showToast("Kotak keluar batas!", "error"); return;
-  }
+  const w = DIM[currentTool][0], h = DIM[currentTool][1];
+  if (x + w > 4 || y + h > 5) { showToast("Kotak keluar batas!", "error"); return; }
 
   const isOverlap = placedPieces.some(p => {
     const pw = DIM[p.t][0], ph = DIM[p.t][1];
     return (x < p.x + pw && x + w > p.x && y < p.y + ph && y + h > p.y);
   });
+  if (isOverlap) { showToast("Bentrok dengan kotak lain!", "error"); return; }
 
-  if(isOverlap) {
-    showToast("Bentrok dengan kotak lain!", "error"); return;
+  // Cek limit cell
+  const addCells = w * h;
+  const newTotal = cellsOf(placedPieces) + addCells;
+  if (newTotal > MAX_CELLS) {
+    showToast("Melebihi " + MAX_CELLS + " cell! Sisakan 2 cell kosong.", "error");
+    return;
   }
 
   saveHistory();
@@ -224,63 +415,59 @@ function handlePlace(e) {
   renderBoard();
 }
 
-// === RENDER UI ===
+// === RENDER ===
 function renderBoard() {
   document.querySelectorAll('.piece').forEach(el => el.remove());
-
   placedPieces.forEach(p => {
     const div = document.createElement('div');
     div.className = 'piece t_' + p.t;
-    const w = DIM[p.t][0];
-    const h = DIM[p.t][1];
-    
+    const w = DIM[p.t][0], h = DIM[p.t][1];
     div.style.width = `calc(${w} * var(--cell-w) + ${w - 1} * var(--gap))`;
     div.style.height = `calc(${h} * var(--cell-h) + ${h - 1} * var(--gap))`;
     div.style.left = `calc(var(--pad) + ${p.x} * (var(--cell-w) + var(--gap)))`;
     div.style.top = `calc(var(--pad) + ${p.y} * (var(--cell-h) + var(--gap)))`;
-    
-    if(p.t === 'r') div.textContent = '▲';
-    if(p.t === 'v') div.textContent = '⏺';
-    if(p.t === 'h') div.textContent = '⬛';
-    if(p.t === 'y') div.textContent = '●';
-    
+    if (p.t === 'r') div.textContent = '▲';
+    if (p.t === 'v') div.textContent = '⏺';
+    if (p.t === 'h') div.textContent = '⬛';
+    if (p.t === 'y') div.textContent = '●';
     document.getElementById('grid').appendChild(div);
   });
-
   updateUI();
 }
 
 function updateUI() {
-  document.getElementById('stats').textContent = `Levels: ${savedLevels.length} | Empty: ${TOTAL_CELLS - placedPieces.length}`;
+  const cells = cellsOf(placedPieces);
+  const empty = TOTAL_CELLS - cells;
+  document.getElementById('stats').textContent = `Levels: ${savedLevels.length} | Cells: ${cells}/${MAX_CELLS} | Empty: ${empty}`;
   document.getElementById('btnUndo').disabled = history.length === 0;
   document.getElementById('btnRedo').disabled = redoStack.length === 0;
   document.getElementById('btnSave').textContent = editIndex >= 0 ? '🔄 Update Level' : '💾 Simpan Level';
   document.getElementById('btnOpenList').textContent = `📋 List (${savedLevels.length})`;
 }
 
-// === HISTORY (UNDO / REDO) ===
+// === HISTORY ===
 function saveHistory() {
   history.push(JSON.stringify(placedPieces));
   redoStack = [];
 }
 document.getElementById('btnUndo').onclick = () => {
-  if(history.length > 0) {
+  if (history.length > 0) {
     redoStack.push(JSON.stringify(placedPieces));
     placedPieces = JSON.parse(history.pop());
     renderBoard();
   }
 };
 document.getElementById('btnRedo').onclick = () => {
-  if(redoStack.length > 0) {
+  if (redoStack.length > 0) {
     history.push(JSON.stringify(placedPieces));
     placedPieces = JSON.parse(redoStack.pop());
     renderBoard();
   }
 };
 
-// === SIMPAN & CLEAR ===
+// === SIMPAN / CLEAR ===
 document.getElementById('btnClear').onclick = () => {
-  if(placedPieces.length > 0 && confirm("Hapus semua kotak di papan?")) {
+  if (placedPieces.length > 0 && confirm("Hapus semua kotak di papan?")) {
     saveHistory();
     placedPieces = [];
     renderBoard();
@@ -288,28 +475,20 @@ document.getElementById('btnClear').onclick = () => {
 };
 
 document.getElementById('btnSave').onclick = () => {
-  const hasRed = placedPieces.some(p => p.t === 'r');
-  if(!hasRed) {
-    showToast("Level harus punya 1 kotak Merah!", "error"); return;
-  }
+  const arr = placedPieces.map(p => [p.t, p.x, p.y]);
+  const v = validatePuzzle(arr);
+  if (!v.ok) { showToast(v.err, "error"); return; }
 
-  if(placedPieces.length > 18) {
-    showToast("Minimal harus ada 2 ruang kosong!", "error"); return;
-  }
-
-  placedPieces.sort((a, b) => (a.t === 'r' ? -1 : (b.t === 'r' ? 1 : 0)));
-  const levelData = placedPieces.map(p => [p.t, p.x, p.y]);
-
-  if(editIndex >= 0) {
-    savedLevels[editIndex] = levelData;
-    showToast("Level berhasil diperbarui!", "success");
+  arr.sort((a, b) => (a[0] === 'r' ? -1 : (b[0] === 'r' ? 1 : 0)));
+  if (editIndex >= 0) {
+    savedLevels[editIndex] = arr;
+    showToast("Level diperbarui!", "success");
   } else {
-    savedLevels.push(levelData);
-    showToast("Level baru berhasil disimpan!", "success");
+    savedLevels.push(arr);
+    showToast("Level baru disimpan!", "success");
   }
 
   localStorage.setItem('slide_master_levels', JSON.stringify(savedLevels));
-  
   placedPieces = [];
   editIndex = -1;
   history = [];
@@ -317,12 +496,9 @@ document.getElementById('btnSave').onclick = () => {
   renderLevelList();
 };
 
-// === MODAL & DAFTAR LEVEL ===
+// === MODAL LIST ===
 const modal = document.getElementById('modalOverlay');
-document.getElementById('btnOpenList').onclick = () => {
-  renderLevelList();
-  modal.style.display = 'flex';
-};
+document.getElementById('btnOpenList').onclick = () => { renderLevelList(); modal.style.display = 'flex'; };
 document.getElementById('btnCloseModal').onclick = () => modal.style.display = 'none';
 document.getElementById('btnCreateNew').onclick = () => {
   placedPieces = []; editIndex = -1; history = []; renderBoard(); modal.style.display = 'none';
@@ -331,12 +507,10 @@ document.getElementById('btnCreateNew').onclick = () => {
 function renderLevelList() {
   const container = document.getElementById('levelListContainer');
   container.innerHTML = '';
-
-  if(savedLevels.length === 0) {
+  if (savedLevels.length === 0) {
     container.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Belum ada level tersimpan.</div>';
     return;
   }
-
   savedLevels.forEach((lvl, idx) => {
     const div = document.createElement('div');
     div.className = 'level-item';
@@ -357,10 +531,10 @@ function renderLevelList() {
     const info = document.createElement('div');
     info.className = 'level-info';
     info.innerHTML = `<div class="level-title">Level ${idx + 1}</div>`;
-    
+
     const actions = document.createElement('div');
     actions.className = 'level-actions';
-    
+
     const btnEdit = document.createElement('button');
     btnEdit.className = 'action-btn btn-info';
     btnEdit.textContent = '✏️ Edit';
@@ -376,10 +550,10 @@ function renderLevelList() {
     btnDel.className = 'action-btn btn-danger';
     btnDel.textContent = '🗑️';
     btnDel.onclick = () => {
-      if(confirm(`Hapus Level ${idx + 1}?`)) {
+      if (confirm(`Hapus Level ${idx + 1}?`)) {
         savedLevels.splice(idx, 1);
         localStorage.setItem('slide_master_levels', JSON.stringify(savedLevels));
-        if(editIndex === idx) { placedPieces = []; editIndex = -1; renderBoard(); }
+        if (editIndex === idx) { placedPieces = []; editIndex = -1; renderBoard(); }
         renderLevelList();
         updateUI();
       }
@@ -395,7 +569,7 @@ function renderLevelList() {
   });
 }
 
-// === FORMATTER JSON (Agar Rapi) ===
+// === FORMATTER JSON ===
 function formatCleanJSON(levels) {
   let out = "[\n";
   levels.forEach((lvl, i) => {
@@ -411,18 +585,14 @@ function formatCleanJSON(levels) {
 
 // === IMPORT / EXPORT ===
 document.getElementById('btnExport').onclick = () => {
-  if(savedLevels.length === 0) { showToast("Belum ada level untuk di-export", "error"); return; }
-  
-  // Gunakan formatter khusus agar rapi
+  if (savedLevels.length === 0) { showToast("Belum ada level", "error"); return; }
   const jsonText = formatCleanJSON(savedLevels);
-  
-  const blob = new Blob([jsonText], {type: "application/json"});
+  const blob = new Blob([jsonText], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url; a.download = "level.json";
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-
   navigator.clipboard.writeText(jsonText).then(() => {
     showToast("File didownload & JSON dicopy!", "success");
   }).catch(() => {
@@ -432,11 +602,11 @@ document.getElementById('btnExport').onclick = () => {
 
 document.getElementById('btnImport').onclick = () => {
   const input = prompt("Paste kode JSON di sini:");
-  if(!input) return;
+  if (!input) return;
   try {
     const parsed = JSON.parse(input);
-    if(Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
-      if(confirm("Ganti semua level saat ini dengan data import?")) {
+    if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
+      if (confirm("Ganti semua level saat ini dengan data import?")) {
         savedLevels = parsed;
         localStorage.setItem('slide_master_levels', JSON.stringify(savedLevels));
         renderLevelList();
@@ -451,17 +621,306 @@ document.getElementById('btnImport').onclick = () => {
   }
 };
 
-// === TOAST NOTIFIKASI ===
+// === SOLVE BUTTON ===
+document.getElementById('btnSolve').onclick = () => {
+  if (placedPieces.length === 0) { showToast("Papan kosong!", "error"); return; }
+  const arr = placedPieces.map(p => [p.t, p.x, p.y]);
+  const v = validatePuzzle(arr);
+  if (!v.ok) { showToast("Puzzle invalid: " + v.err, "error"); return; }
+
+  showToast("⏳ Menghitung solusi...", "info");
+  const btn = document.getElementById('btnSolve');
+  btn.disabled = true;
+  setTimeout(() => {
+    const t0 = performance.now();
+    const moves = solvePuzzle(arr);
+    const dt = performance.now() - t0;
+    btn.disabled = false;
+    if (!moves) {
+      showToast("❌ Tidak ada solusi!", "error");
+    } else if (moves.length === 0) {
+      showToast("✓ Merah sudah di target", "success");
+    } else {
+      showToast(`✅ Solvable: ${moves.length} langkah (${dt.toFixed(0)}ms)`, "success");
+    }
+  }, 50);
+};
+
+// === AI MODAL ===
+const aiModal = document.getElementById('aiModal');
+document.getElementById('btnCloseAIModal').onclick = () => aiModal.style.display = 'none';
+
+document.getElementById('btnAI').onclick = () => {
+  document.getElementById('aiProvider').value = aiConfig.provider || 'openai';
+  document.getElementById('aiModel').value = aiConfig.model || '';
+  document.getElementById('aiApiKey').value = aiConfig.apiKey || '';
+  document.getElementById('aiBaseUrl').value = aiConfig.baseURL || '';
+  document.getElementById('aiBaseUrlWrap').style.display = aiConfig.provider === 'custom' ? 'flex' : 'none';
+  document.getElementById('aiStatus').textContent = '⚪ Belum dites';
+  document.getElementById('aiStatus').style.background = 'var(--surface-light)';
+  document.getElementById('aiStatus').style.color = 'var(--text-muted)';
+  document.getElementById('aiGenStatus').textContent = 'Klik untuk generate puzzle dengan AI';
+  aiModal.style.display = 'flex';
+};
+
+document.getElementById('aiProvider').onchange = (e) => {
+  const p = e.target.value;
+  const defaults = { openai: 'gpt-4o-mini', gemini: 'gemini-2.0-flash', groq: 'llama-3.3-70b-versatile', openrouter: 'openai/gpt-4o-mini', custom: '' };
+  const allDefaults = Object.values(defaults).filter(Boolean);
+  const cur = document.getElementById('aiModel').value;
+  if (!cur || allDefaults.includes(cur)) document.getElementById('aiModel').value = defaults[p] || '';
+  document.getElementById('aiBaseUrlWrap').style.display = p === 'custom' ? 'flex' : 'none';
+};
+
+document.getElementById('btnAISave').onclick = () => {
+  aiConfig = readAIForm();
+  saveAIConfigStore();
+  showToast("✅ Konfigurasi AI disimpan", "success");
+};
+
+// === AI API HELPERS ===
+function openAIURLFor(provider, baseURL) {
+  if (provider === 'openai') return 'https://api.openai.com/v1/chat/completions';
+  if (provider === 'groq') return 'https://api.groq.com/openai/v1/chat/completions';
+  if (provider === 'openrouter') return 'https://openrouter.ai/api/v1/chat/completions';
+  if (provider === 'custom') return baseURL;
+  return '';
+}
+
+async function aiTest(cfg) {
+  if (!cfg.apiKey) throw new Error('API key kosong');
+  if (!cfg.model) throw new Error('Model kosong');
+  
+  if (cfg.provider === 'gemini') {
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(cfg.model) + ':generateContent?key=' + encodeURIComponent(cfg.apiKey);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: 'Say OK' }] }],
+        generationConfig: { maxOutputTokens: 10 }
+      })
+    });
+    if (!res.ok) {
+      const e = await res.text();
+      throw new Error('HTTP ' + res.status + ' — ' + e.substring(0, 80));
+    }
+    return await res.json();
+  }
+  
+  const url = openAIURLFor(cfg.provider, cfg.baseURL);
+  if (!url) throw new Error('Base URL kosong');
+  const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.apiKey };
+  if (cfg.provider === 'openrouter') {
+    headers['HTTP-Referer'] = location.origin;
+    headers['X-Title'] = 'Slide Master Editor';
+  }
+  const res = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      model: cfg.model,
+      messages: [{ role: 'user', content: 'Say OK' }],
+      max_tokens: 10
+    })
+  });
+  if (!res.ok) {
+    const e = await res.text();
+    throw new Error('HTTP ' + res.status + ' — ' + e.substring(0, 80));
+  }
+  return await res.json();
+}
+
+document.getElementById('btnAITest').onclick = async () => {
+  const btn = document.getElementById('btnAITest');
+  const status = document.getElementById('aiStatus');
+  const cfg = readAIForm();
+  if (!cfg.apiKey) {
+    status.textContent = '⚠️ API Key kosong';
+    status.style.background = '#4a2020';
+    status.style.color = '#ff8a8e';
+    return;
+  }
+  btn.disabled = true;
+  status.textContent = '🟡 Menguji koneksi...';
+  status.style.background = '#2a3a4a';
+  status.style.color = '#00B4FF';
+  try {
+    await aiTest(cfg);
+    status.textContent = '🟢 Koneksi OK — ' + cfg.provider + ' / ' + cfg.model;
+    status.style.background = '#1a3a1a';
+    status.style.color = '#5cffa6';
+  } catch(e) {
+    status.textContent = '🔴 Gagal: ' + (e.message || 'Error').substring(0, 100);
+    status.style.background = '#4a1a1a';
+    status.style.color = '#ff6a70';
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+// === AI PUZZLE GENERATION ===
+const PUZZLE_SYSTEM_PROMPT = `You are a puzzle generator for "Slide Master", a sliding block puzzle on a 4x5 grid.
+
+GRID: 4 columns (x: 0-3), 5 rows (y: 0-4). Total 20 cells.
+
+BLOCKS:
+- "r" = red 2x2 (EXACTLY ONE) — win when top-left reaches (1, 3)
+- "v" = blue 1x2 (1 wide, 2 tall)
+- "h" = green 2x1 (2 wide, 1 tall)
+- "y" = yellow 1x1
+
+RULES (MUST ALL BE TRUE):
+1. Exactly ONE "r" block
+2. "r" NOT already at position (1, 3)
+3. Total occupied cells ≤ 18 (at least 2 cells empty)
+4. No overlaps, all blocks within bounds
+5. Puzzle MUST be solvable — red can reach (1, 3) by sliding blocks
+6. Solvable in 3-30 moves
+
+OUTPUT FORMAT: Return ONLY a JSON array, no markdown, no explanation:
+[["r", 1, 1], ["v", 0, 0], ["h", 2, 4], ["y", 3, 2]]`;
+
+function extractJSON(text) {
+  text = String(text || '').trim();
+  try { return JSON.parse(text); } catch(_) {}
+  const s1 = text.indexOf('['), e1 = text.lastIndexOf(']');
+  if (s1 >= 0 && e1 > s1) {
+    try { return JSON.parse(text.substring(s1, e1 + 1)); } catch(_) {}
+  }
+  const s2 = text.indexOf('{'), e2 = text.lastIndexOf('}');
+  if (s2 >= 0 && e2 > s2) {
+    try {
+      const obj = JSON.parse(text.substring(s2, e2 + 1));
+      for (const k of ['pieces', 'level', 'puzzle', 'blocks']) {
+        if (Array.isArray(obj[k])) return obj[k];
+      }
+    } catch(_) {}
+  }
+  throw new Error('Tidak bisa parse JSON dari AI');
+}
+
+async function aiGeneratePuzzle(cfg) {
+  const userPrompt = 'Generate a valid solvable puzzle. Return ONLY the JSON array.';
+
+  if (cfg.provider === 'gemini') {
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(cfg.model) + ':generateContent?key=' + encodeURIComponent(cfg.apiKey);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: PUZZLE_SYSTEM_PROMPT }] },
+        contents: [{ parts: [{ text: userPrompt }] }],
+        generationConfig: { temperature: 1.0, responseMimeType: 'application/json', maxOutputTokens: 2048 }
+      })
+    });
+    if (!res.ok) {
+      const e = await res.text();
+      throw new Error('HTTP ' + res.status + ' — ' + e.substring(0, 100));
+    }
+    const data = await res.json();
+    const text = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text) || '';
+    return extractJSON(text);
+  }
+
+  const url = openAIURLFor(cfg.provider, cfg.baseURL);
+  if (!url) throw new Error('Base URL kosong');
+  const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.apiKey };
+  if (cfg.provider === 'openrouter') {
+    headers['HTTP-Referer'] = location.origin;
+    headers['X-Title'] = 'Slide Master Editor';
+  }
+  const body = {
+    model: cfg.model,
+    messages: [
+      { role: 'system', content: PUZZLE_SYSTEM_PROMPT },
+      { role: 'user', content: userPrompt }
+    ],
+    temperature: 1.0,
+    max_tokens: 2048
+  };
+  if (cfg.provider === 'openai') body.response_format = { type: 'json_object' };
+  
+  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+  if (!res.ok) {
+    const e = await res.text();
+    throw new Error('HTTP ' + res.status + ' — ' + e.substring(0, 100));
+  }
+  const data = await res.json();
+  const text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+  return extractJSON(text);
+}
+
+async function aiGenerateWithRetry(cfg, maxAttempts, onStatus) {
+  let lastErr;
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      onStatus && onStatus('⏳ Percobaan ' + (i+1) + '/' + maxAttempts + '...');
+      const parsed = await aiGeneratePuzzle(cfg);
+      const v = validatePuzzle(parsed);
+      if (!v.ok) { lastErr = new Error(v.err); continue; }
+      const moves = solvePuzzle(parsed);
+      if (!moves || moves.length === 0) { lastErr = new Error('Puzzle tidak solvable'); continue; }
+      if (moves.length < 3) { lastErr = new Error('Terlalu mudah (' + moves.length + ' langkah)'); continue; }
+      return { pieces: parsed, moves };
+    } catch(e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error('Gagal generate');
+}
+
+document.getElementById('btnAIGenerate').onclick = async () => {
+  const btn = document.getElementById('btnAIGenerate');
+  const genStatus = document.getElementById('aiGenStatus');
+  const cfg = readAIForm();
+  if (!cfg.apiKey) {
+    genStatus.textContent = '⚠️ Isi API Key & Save dulu';
+    return;
+  }
+  if (placedPieces.length > 0 && !confirm('Ganti papan saat ini dengan puzzle AI?')) return;
+  
+  btn.disabled = true;
+  genStatus.textContent = '⏳ Menghasilkan puzzle...';
+  try {
+    const result = await aiGenerateWithRetry(cfg, 3, (msg) => { genStatus.textContent = msg; });
+    placedPieces = result.pieces.map(([t, x, y]) => ({ t, x, y }));
+    history = []; redoStack = [];
+    editIndex = -1;
+    renderBoard();
+    // Simpan config terakhir
+    aiConfig = cfg;
+    saveAIConfigStore();
+    genStatus.textContent = '✅ Sukses: ' + result.pieces.length + ' kotak, ' + result.moves.length + ' langkah solusi';
+    setTimeout(() => { aiModal.style.display = 'none'; }, 600);
+    showToast("✅ Puzzle AI siap!", "success");
+  } catch(e) {
+    genStatus.textContent = '❌ ' + (e.message || 'Gagal').substring(0, 100);
+    showToast("Gagal: " + (e.message || 'Error'), "error");
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+// === TOAST ===
 let toastTimeout;
-function showToast(msg, type = 'info') {
+function showToast(msg, type) {
+  type = type || 'info';
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'show ' + type;
   clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => { t.className = ''; }, 2500);
+  toastTimeout = setTimeout(() => { t.className = ''; }, 2800);
 }
 
-// Jalankan App
+// === PWA SW ===
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js', { scope: './' }).catch(() => {});
+  });
+}
+
+// === START ===
 init();
 </script>
 </body>
