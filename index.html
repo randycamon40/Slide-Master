@@ -26,6 +26,26 @@
   --board-shadow: rgba(0,0,0,.9); --txt: #e9d8ff; --btn: #6a1b9a;
   --red: #ff2d95; --blue: #00e5ff; --blue2: #00a8c0; --yel: #b6ff00;
 }
+[data-theme=sunset] {
+  --bg: #2a1410; --body: #3a1d15; --board: #180a07; --board-border: #4a2515;
+  --board-shadow: rgba(0,0,0,.85); --txt: #ffe8d0; --btn: #5a2a1a;
+  --red: #FF5722; --blue: #FF4081; --blue2: #C2185B; --yel: #FFC107;
+}
+[data-theme=ocean] {
+  --bg: #0a1a24; --body: #0f2430; --board: #05121a; --board-border: #143040;
+  --board-shadow: rgba(0,0,0,.85); --txt: #d0e8f0; --btn: #1a3a4a;
+  --red: #FF5252; --blue: #26C6DA; --blue2: #00838F; --yel: #FFD54F;
+}
+[data-theme=forest] {
+  --bg: #0f1a10; --body: #142418; --board: #081208; --board-border: #1a3420;
+  --board-shadow: rgba(0,0,0,.85); --txt: #d0e8d0; --btn: #1f3a24;
+  --red: #E53935; --blue: #29B6F6; --blue2: #0277BD; --yel: #FFB300;
+}
+[data-theme=retro] {
+  --bg: #c8b896; --body: #e8dcc0; --board: #8a7a5a; --board-border: #6a5a3a;
+  --board-shadow: rgba(0,0,0,.3); --txt: #3a2a1a; --btn: #a89878;
+  --red: #C8332E; --blue: #3A6EA5; --blue2: #2A4E75; --yel: #E8B330;
+}
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; -webkit-touch-callout: none; user-select: none; }
 html, body { margin: 0; height: 100%; background: var(--bg); overscroll-behavior: none; overscroll-behavior-x: contain; touch-action: none; font-family: system-ui, sans-serif; color: var(--txt); }
@@ -87,23 +107,32 @@ button:active { transform: translateY(2px) scale(.97); box-shadow: 0 1px 0 rgba(
 button.on { outline: 2px solid var(--yel); box-shadow: 0 0 12px var(--yel); }
 #tools button { padding: 7px 9px; font-size: 12px; }
 
-#lobby { position: absolute; inset: 0; background: radial-gradient(circle at center, #1a1a1a 0%, #050505 100%); z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; overflow: hidden; }
-.bg-block { position: absolute; border-radius: 8px; opacity: 0.15; animation: float-block 8s infinite ease-in-out alternate; box-shadow: inset 0 0 20px rgba(255,255,255,0.2); }
-.bg-r { width: 80px; height: 80px; background: var(--red); top: 15%; left: 10%; }
-.bg-b { width: 40px; height: 80px; background: var(--blue); top: 65%; right: 15%; animation-delay: -3s; }
-.bg-y { width: 40px; height: 40px; background: var(--yel); bottom: 20%; left: 20%; animation-delay: -5s; }
+#lobby { position: absolute; inset: 0; background: radial-gradient(circle at 50% 20%, var(--body) 0%, var(--bg) 100%); z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; overflow: hidden; padding: 20px 10px; transition: background .3s ease; }
+#lobby::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(128,128,128,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(128,128,128,.1) 1px, transparent 1px); background-size: 30px 30px; pointer-events: none; opacity: .5; }
+.bg-block { position: absolute; border-radius: 12px; opacity: 0.3; animation: float-block 10s infinite ease-in-out alternate; box-shadow: inset 0 0 20px rgba(255,255,255,0.4), 0 0 30px currentColor; }
+.bg-r { width: 80px; height: 80px; background: var(--red); top: 15%; left: 10%; color: var(--red); }
+.bg-b { width: 40px; height: 80px; background: var(--blue); top: 65%; right: 15%; animation-delay: -3s; color: var(--blue); }
+.bg-y { width: 40px; height: 40px; background: var(--yel); bottom: 20%; left: 20%; animation-delay: -5s; color: var(--yel); }
+.bg-g { width: 60px; height: 60px; background: #00E676; top: 25%; right: 20%; animation-delay: -1s; color: #00E676; }
+.bg-r2 { width: 30px; height: 60px; background: var(--red); top: 55%; left: 5%; animation-delay: -4s; color: var(--red); }
+.bg-b2 { width: 70px; height: 70px; background: var(--blue); bottom: 10%; right: 10%; animation-delay: -7s; border-radius: 50%; color: var(--blue); }
 @keyframes float-block { 0% { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(-40px) rotate(20deg); } }
-#lobby h1 { font-size: 36px; font-weight: 900; letter-spacing: 6px; margin: 0 0 10px 0; background: linear-gradient(180deg, #fff, #888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 10px 20px rgba(0,0,0,0.8); animation: title-pulse 3s infinite alternate; z-index: 2;}
+#lobby h1 { font-size: 40px; font-weight: 900; letter-spacing: 4px; margin: 0 0 10px 0; background: linear-gradient(180deg, var(--txt) 0%, var(--yel) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.6)); animation: title-pulse 3s infinite alternate; z-index: 2; text-align: center; line-height: 1.1; }
 @keyframes title-pulse { 0% { filter: drop-shadow(0 0 5px rgba(255, 59, 66, 0.4)); } 100% { filter: drop-shadow(0 0 25px rgba(0, 180, 255, 0.6)); } }
-#lobby .btn-group { display: flex; flex-direction: column; gap: 12px; width: 220px; z-index: 2; }
-#lobby button { padding: 14px; font-size: 14px; font-weight: 800; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: linear-gradient(180deg, #444, #222); color: #fff; letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 5px 0 #111, 0 10px 20px rgba(0,0,0,0.5); transition: all 0.1s ease; cursor: pointer; }
+#lobby .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 290px; z-index: 2; margin-top: 5px; }
+#lobby button { padding: 12px 6px; font-size: 11px; font-weight: 800; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); background: linear-gradient(180deg, #3a3a3a, #1a1a1a); color: #eee; letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 5px 0 #0a0a0a, 0 10px 20px rgba(0,0,0,0.5); transition: all 0.1s ease; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; line-height: 1.2; }
 #lobby button:active { transform: translateY(4px) scale(.97); box-shadow: 0 0 0 #111, 0 5px 10px rgba(0,0,0,0.5); }
 #lobby #bPlay:active { animation: none; transform: translateY(4px) scale(.96); box-shadow: 0 0 0 #661100, 0 5px 10px rgba(0,0,0,0.5); }
-#lobby #adminBtn{position:absolute;top:max(10px,env(safe-area-inset-top));right:10px;z-index:5;width:32px;height:32px;min-width:0;padding:0;border-radius:8px;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);box-shadow:none;font-size:14px;font-weight:400;opacity:.55;letter-spacing:0;text-transform:none;transition:.2s;cursor:pointer;-webkit-tap-highlight-color:transparent;line-height:1}
+#lobby #adminBtn{position:absolute;top:max(10px,env(safe-area-inset-top));right:10px;z-index:5;width:32px;height:32px;min-width:0;padding:0;border-radius:8px;display:grid;place-items:center;background:rgba(128,128,128,.2);border:1px solid rgba(128,128,128,.4);box-shadow:none;font-size:14px;font-weight:400;opacity:.65;letter-spacing:0;text-transform:none;transition:.2s;cursor:pointer;-webkit-tap-highlight-color:transparent;line-height:1}
 #lobby #adminBtn.on{opacity:1;background:linear-gradient(135deg,var(--yel),#ff9900);color:#000;border-color:var(--yel);box-shadow:0 0 14px var(--yel)}
 #lobby #adminBtn:active{transform:scale(.9);box-shadow:0 0 14px var(--yel)}
-#lobby #bPlay { background: linear-gradient(180deg, #ff6a70, #c91b22); box-shadow: 0 5px 0 #661100, 0 10px 20px rgba(0,0,0,0.5); border-color: #ff8a8e; font-size: 16px; animation: bounce-play 2s infinite ease-in-out; }
-#lobby #modeGroup .mode-btn { padding: 7px 10px; font-size: 10px; font-weight: 800; letter-spacing: 1px; border-radius: 8px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.15); color: rgba(255,255,255,.55); box-shadow: none; width: auto; min-width: 0; transition: background .2s, color .2s, border-color .2s, box-shadow .2s, transform .14s; }
+#lobby #bPlay { grid-column: 1 / -1; background: linear-gradient(180deg, #ff6a70, #c91b22); box-shadow: 0 5px 0 #661100, 0 10px 20px rgba(0,0,0,0.5); border-color: #ff8a8e; font-size: 18px; padding: 16px; flex-direction: row; gap: 10px; animation: bounce-play 2s infinite ease-in-out; }
+#lobby #bRand { background: linear-gradient(180deg, #9c27b0, #6a1b9a); box-shadow: 0 5px 0 #38006b, 0 10px 20px rgba(0,0,0,0.5); border-color: #ab47bc; }
+#lobby #bLevels { background: linear-gradient(180deg, #03a9f4, #0277bd); box-shadow: 0 5px 0 #01579b, 0 10px 20px rgba(0,0,0,0.5); border-color: #4fc3f7; }
+#lobby #bSettings { background: linear-gradient(180deg, #78909c, #455a64); box-shadow: 0 5px 0 #263238, 0 10px 20px rgba(0,0,0,0.5); border-color: #90a4ae; }
+#lobby #bAch { background: linear-gradient(180deg, #ff9800, #e65100); box-shadow: 0 5px 0 #bf360c, 0 10px 20px rgba(0,0,0,0.5); border-color: #ffb74d; }
+#lobby #bShop { grid-column: 1 / -1; background: linear-gradient(180deg, #4caf50, #2e7d32); box-shadow: 0 5px 0 #1b5e20, 0 10px 20px rgba(0,0,0,0.5); border-color: #81c784; }
+#lobby #modeGroup .mode-btn { padding: 7px 10px; font-size: 10px; font-weight: 800; letter-spacing: 1px; border-radius: 8px; background: rgba(128,128,128,.15); border: 1px solid rgba(128,128,128,.3); color: var(--txt); box-shadow: none; width: auto; min-width: 0; transition: background .2s, color .2s, border-color .2s, box-shadow .2s, transform .14s; opacity: 0.8; }
 #lobby #modeGroup .mode-btn.on { background: rgba(255,204,0,.18); color: var(--yel); border-color: rgba(255,204,0,.55); box-shadow: 0 0 14px rgba(255,204,0,.4), inset 0 1px 0 rgba(255,255,255,.1); }
 #lobby #modeGroup .mode-btn:active { transform: translateY(2px) scale(.95); box-shadow: none; }
 @keyframes bounce-play { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); box-shadow: 0 9px 0 #661100, 0 15px 20px rgba(0,0,0,0.5); } }
@@ -122,7 +151,7 @@ button.on { outline: 2px solid var(--yel); box-shadow: 0 0 12px var(--yel); }
 @keyframes ovIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes ovItemIn { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
 #ov, #grid, #lobby { touch-action: pan-y; overscroll-behavior: contain; }
-#ov button { background: var(--body); color: var(--txt); }
+#ov button:not(.lvl-btn) { background: #333; color: #fff; border: 1px solid #555; box-shadow: 0 4px 0 #111; }
 .lvl-btn { width: 60px; height: 65px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; background: var(--body); border: 1px solid #444; color: var(--txt); box-shadow: 0 4px 0 #111; padding: 0; margin: 0; }
 .lvl-btn:active { transform: translateY(3px) scale(.94); box-shadow: 0 0 0 #111; }
 .lvl-btn.active { outline: 2px solid var(--yel); box-shadow: 0 0 12px var(--yel); }
@@ -143,6 +172,23 @@ button.on { outline: 2px solid var(--yel); box-shadow: 0 0 12px var(--yel); }
 .boot { animation: boot .5s both; }
 @keyframes boot { from { opacity: 0; filter: brightness(3); } }
 .confetti { position: fixed; width: 10px; height: 16px; top: -20px; z-index: 999; animation: fall linear forwards; pointer-events: none; border-radius: 2px; }
+
+#tut { position: absolute; inset: 0; background: rgba(5,5,10,0.85); backdrop-filter: blur(10px); z-index: 500; display: flex; align-items: center; justify-content: center; animation: ovIn .3s ease-out; padding: 20px; box-sizing: border-box; }
+#tut[hidden] { display: none; }
+.tut-card { background: linear-gradient(180deg, rgba(30,30,40,0.95), rgba(15,15,20,0.95)); border: 1px solid rgba(255,255,255,0.15); border-radius: 24px; padding: 30px 24px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 40px rgba(0,180,255,0.15), inset 0 1px 0 rgba(255,255,255,0.1); position: relative; overflow: hidden; animation: tutPop .5s cubic-bezier(.2,.9,.3,1) both; }
+@keyframes tutPop { from { transform: scale(0.9) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+.tut-icon { font-size: 56px; margin-bottom: 16px; filter: drop-shadow(0 0 20px rgba(255,255,255,0.2)); }
+.tut-title { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: 1.5px; margin: 0 0 12px 0; text-shadow: 0 2px 10px rgba(0,0,0,0.5); line-height: 1.2; }
+.tut-desc { font-size: 14px; color: #b0b0c0; line-height: 1.6; margin-bottom: 24px; min-height: 68px; }
+.tut-desc b { color: #ffcc00; }
+.tut-desc .red-txt { color: #FF3B42; font-weight: 800; }
+.tut-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 24px; }
+.tut-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.3s ease; }
+.tut-dot.on { background: #00B4FF; box-shadow: 0 0 10px #00B4FF; transform: scale(1.2); }
+.tut-btn { background: linear-gradient(180deg, #00B4FF, #0088CC); color: #fff; border: 1px solid #5cd6ff; border-radius: 12px; padding: 14px 20px; font-weight: 900; font-size: 15px; letter-spacing: 1px; width: 100%; box-shadow: 0 5px 0 #004466, 0 10px 20px rgba(0,180,255,0.3); cursor: pointer; transition: all 0.1s; text-transform: uppercase; }
+.tut-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #004466; }
+.tut-skip { background: transparent; color: #888; box-shadow: none; border: 0; font-size: 12px; margin-top: 16px; padding: 8px; text-decoration: underline; width: auto; cursor: pointer; }
+.tut-skip:active { transform: none; box-shadow: none; color: #fff; }
 @keyframes fall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
 </style>
 </head>
@@ -177,7 +223,10 @@ button.on { outline: 2px solid var(--yel); box-shadow: 0 0 12px var(--yel); }
     <div class="bg-block bg-r"></div>
     <div class="bg-block bg-b"></div>
     <div class="bg-block bg-y"></div>
-    <div style="font-size: 10px; color: rgba(255,255,255,.85); letter-spacing: 3px; margin-bottom: 30px; opacity: 0.6; z-index: 2; text-transform: uppercase; text-shadow: 0 1px 2px rgba(0,0,0,.5);">Puzzle Game</div>
+    <div class="bg-block bg-g"></div>
+    <div class="bg-block bg-r2"></div>
+    <div class="bg-block bg-b2"></div>
+    <div style="font-size: 11px; color: var(--txt); letter-spacing: 6px; margin-bottom: 0; opacity: 0.6; z-index: 2; text-transform: uppercase; text-shadow: 0 1px 2px rgba(0,0,0,.5); font-weight: 700;">Puzzle Game</div>
     <h1>SLIDE MASTER</h1>
     <div id="modeGroup" style="display:flex;gap:8px;z-index:2;margin-bottom:8px;">
       <button class="mode-btn" data-mode="classic">CLASSIC</button>
@@ -185,15 +234,28 @@ button.on { outline: 2px solid var(--yel); box-shadow: 0 0 12px var(--yel); }
     </div>
     <div class="btn-group">
       <button id="bPlay">▶ PLAY GAME</button>
-      <button id="bRand">RANDOM LEVEL</button>
-      <button id="bLevels">SELECT LEVEL</button>
+      <button id="bRand">RANDOM</button>
+      <button id="bLevels">SELECT</button>
+      <button id="bAch">ACHIEVEMENTS</button>
       <button id="bSettings">SETTINGS</button>
-      <button id="bEdit" style="display:none;background:linear-gradient(180deg,#5cffa6,#00a050);box-shadow:0 5px 0 #004422,0 10px 20px rgba(0,0,0,0.5);border-color:#5cffa6;color:#003318;font-size:14px;font-weight:900;">✏️ EDIT LEVEL</button>
+      <button id="bShop">🛒 SHOP</button>
+      <button id="bEdit" style="display:none;grid-column:1 / -1;background:linear-gradient(180deg,#5cffa6,#00a050);box-shadow:0 5px 0 #004422,0 10px 20px rgba(0,0,0,0.5);border-color:#5cffa6;color:#003318;font-size:14px;font-weight:900;">EDIT LEVEL</button>
 
     </div>
-    <div id="lobby-stats" style="font-size: 13px; color: #888; letter-spacing: 1px; text-align: center; z-index: 2; margin-top: 15px;">🏆 Solved: 0 · ⚡ XP: 0</div>
+    <div id="lobby-stats" style="font-size: 13px; color: #ccc; letter-spacing: 1px; text-align: center; z-index: 2; margin-top: 5px; background: rgba(0,0,0,0.4); padding: 10px 15px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.5); width: 290px; box-sizing: border-box;">🏆 Solved: 0 · ⚡ XP: 0</div>
   </div>
   
+  <div id="tut" hidden>
+    <div class="tut-card">
+      <div class="tut-icon" id="tutIcon">👋</div>
+      <h2 class="tut-title" id="tutTitle">SELAMAT DATANG</h2>
+      <div class="tut-desc" id="tutDesc">Di <b>Slide Master</b>. Siap mengasah otakmu?</div>
+      <div class="tut-dots" id="tutDots"></div>
+      <button class="tut-btn" id="tutNext">LANJUT</button>
+      <button class="tut-skip" id="tutSkip">Lewati Tutorial</button>
+    </div>
+  </div>
+
   <div id="ov" hidden></div>
 </div>
 
@@ -204,7 +266,25 @@ const DIM = { r:[2,2], v:[1,2], h:[2,1], y:[1,1] };
 const COL = { r:'#FF3B42', v:'#00B4FF', h:'#00E676', y:'#FFCC00' }; 
 let LEVELS = []; // Data level murni dari level.js
 const $ = s => document.querySelector(s);
-const themes = ['black', 'white', 'neon'];
+const themes = ['black', 'white', 'neon', 'sunset', 'ocean', 'forest', 'retro'];
+const RANKS = [
+  { name: 'Rookie', xp: 0 },
+  { name: 'Novice', xp: 100 },
+  { name: 'Pro',    xp: 500 },
+  { name: 'Expert', xp: 1500 },
+  { name: 'Master', xp: 4000 },
+  { name: 'Legend', xp: 10000 }
+];
+const THEMES_SHOP = [
+  { id: 'black',  name: 'Dark',   cost: 0,    preview: 'linear-gradient(135deg,#1a1a1a,#000)' },
+  { id: 'white',  name: 'White',  cost: 500,  preview: 'linear-gradient(135deg,#f9f9f9,#c0c0c0)' },
+  { id: 'sunset', name: 'Sunset', cost: 800,  preview: 'linear-gradient(135deg,#FF5722,#FF4081)' },
+  { id: 'ocean',  name: 'Ocean',  cost: 1000, preview: 'linear-gradient(135deg,#26C6DA,#0f2430)' },
+  { id: 'forest', name: 'Forest', cost: 1200, preview: 'linear-gradient(135deg,#29B6F6,#00E676)' },
+  { id: 'neon',   name: 'Neon',   cost: 1500, preview: 'linear-gradient(135deg,#ff2d95,#00e5ff)' },
+  { id: 'retro',  name: 'Retro',  cost: 1500, preview: 'linear-gradient(135deg,#e8dcc0,#C8332E)' }
+];
+const HINT_COST = 50;
 
 const safeGetSS = () => { try { return localStorage.getItem('ss_state'); } catch(e) { return null; } };
 const safeRmSS = () => { try { localStorage.removeItem('ss_state'); } catch(e) {} };
@@ -214,7 +294,8 @@ let S = {
   lvl: 0, bl: [], moves: 0, hist: [], redo: [], sel: null, 
   t0: 0, done: false, mode: 'classic', par: 0, hint: [], 
   snd: true, theme: 0, assist: false, auto: null, C: 60, tk: 0,
-  hintUses: 0, hintActive: false
+  hintUses: 0, hintActive: false, hintLoading: false,
+  chalActive: false, chalTimeLeft: 120, chalLevel: 0
 };
 let genId = 0; 
 
@@ -250,10 +331,46 @@ P = P || { best: {}, xp: 0, max: 0, total: 0, mode: 'classic' };
 if(P.theme === undefined) P.theme = 0;
 if(P.lvl === undefined) P.lvl = 0;
 if(P.mode === undefined || P.mode === 'learn') P.mode = 'classic';
+if(P.chalRecords === undefined) P.chalRecords = [];
+if(P.hintTokens === undefined) P.hintTokens = 0;
+if(P.streak === undefined) P.streak = 0;
+if(P.tutDone === undefined) P.tutDone = false;
+if(!P.unlockedThemes) {
+  P.unlockedThemes = ['black'];
+  const _cur = themes[P.theme || 0];
+  if(_cur && !P.unlockedThemes.includes(_cur)) P.unlockedThemes.push(_cur);
+}
+function getRank(xp) {
+  let r = RANKS[0];
+  for(const k of RANKS) { if(xp >= k.xp) r = k; else break; }
+  return r;
+}
+function getNextRank(xp) {
+  for(const k of RANKS) if(xp < k.xp) return k;
+  return null;
+}
+function nextUnlockedTheme() {
+  if(isAdmin) return (S.theme + 1) % themes.length;
+  const unlocked = P.unlockedThemes || ['black'];
+  let i = S.theme;
+  for(let k = 0; k < themes.length; k++) {
+    i = (i + 1) % themes.length;
+    if(unlocked.includes(themes[i])) return i;
+  }
+  return S.theme;
+}
+function updateHintButton() {
+  const base = Math.max(0, 5 - S.hintUses);
+  const extra = P.hintTokens || 0;
+  const btn = $('#bL');
+  if(!btn) return;
+  btn.textContent = 'HINT (' + base + (extra > 0 ? '+' + extra : '') + ')';
+  btn.disabled = (base === 0 && extra === 0) || S.hintLoading;
+}
 S.theme = P.theme;
 
 try {
-  if (sessionStorage.getItem('ss_admin') === '1') {
+  if (localStorage.getItem('ss_admin') === '1') {
     setTimeout(showAdminUI, 0);
   }
 } catch(_) {}
@@ -494,14 +611,19 @@ function load(n) {
   S.sel = null; S.t0 = 0; S.done = false;
   S.assist = false; S.par = 0; S.tk = 0;
   clearInterval(S.auto); S.auto = null;
-  S.hintUses = 0; S.hintActive = false;
+  S.hintUses = 0; S.hintActive = false; S.hintLoading = false;
   if(S.mode === 'learn') S.mode = 'classic';
-  const _hb = $('#bL'); if(_hb) { _hb.disabled = false; _hb.classList.remove('on'); _hb.textContent = 'HINT (5)'; }
+  updateHintButton();
   
   $('#ov').hidden = true;
   $('#msg').textContent = ''; $('#msg').classList.remove('warn'); $('#msg').style.color = '';
-  $('#tm').textContent = S.mode === 'chal' ? '120s' : '0s';
-  $('#tfill').style.width = '0%';
+  if(S.chalActive) {
+    $('#tm').textContent = Math.ceil(S.chalTimeLeft) + 's';
+    $('#tfill').style.width = Math.min(100, Math.max(0, (S.chalTimeLeft/120)*100)) + '%';
+  } else {
+    $('#tm').textContent = '0s';
+    $('#tfill').style.width = '0%';
+  }
   
   inner.innerHTML = '';
   inner.classList.remove('reveal');
@@ -573,10 +695,12 @@ function redo() {
 
 function showHint() {
   inner.querySelectorAll('.arr').forEach(a => a.remove());
-  if(!S.hintActive || S.done) return;
+  if(!S.hintActive || S.done) { S.hintLoading = false; updateHintButton(); return; }
   S.hintActive = false;
   const g = genId, m0 = S.moves;
   ask(mv => {
+    S.hintLoading = false;
+    updateHintButton();
     if(g !== genId || S.moves !== m0 || S.done) return;
     if(!mv || !mv.length) { $('#msg').textContent = '⚠ Level tidak punya solusi'; $('#msg').style.color = 'var(--red)'; return; }
     S.hint = mv;
@@ -607,12 +731,26 @@ function saveGameState() {
   if(S.done) { safeRmSS(); return; }
   try {
     safeSetSS(JSON.stringify({
-      lvl: S.lvl, bl: S.bl.map(b => [b.t, b.x, b.y]), moves: S.moves, hist: S.hist
+      lvl: S.lvl, bl: S.bl.map(b => [b.t, b.x, b.y]), moves: S.moves, hist: S.hist,
+      chalActive: S.chalActive, chalTimeLeft: S.chalTimeLeft, chalLevel: S.chalLevel, mode: S.mode
     }));
   } catch(e) {}
 }
 
 function win() {
+  if(S.chalActive) {
+    S.chalLevel++;
+    S.chalTimeLeft = Math.min(120, S.chalTimeLeft + 30);
+    spawnConfetti();
+    tone(880, .1, 0, 'triangle');
+    vib([30, 20, 30]);
+    if(S.lvl + 1 < LEVELS.length) {
+      load(S.lvl + 1);
+    } else {
+      endChallenge(true);
+    }
+    return;
+  }
   S.done = true;
   safeRmSS();
   spawnConfetti();
@@ -630,6 +768,11 @@ function win() {
     P.best[S.lvl] = { m: Math.min(o.m || 1e9, S.moves), t: Math.min(o.t || 1e9, t), s: Math.max(o.s || 0, st) };
     P.xp += 100 + (ch && r === 'SUPER' ? 100 : 0);
     P.total++;
+    if(S.hintUses === 0) {
+      P.streak = (P.streak || 0) + 1;
+    } else {
+      P.streak = 0;
+    }
     if(S.lvl > P.max && S.lvl <= 500) P.max = S.lvl;
     save();
   }
@@ -641,6 +784,247 @@ function win() {
      XP ${P.xp} · Solved ${P.total}</div>`,
     [['Replay', () => load(S.lvl)], ...(S.lvl + 1 < LEVELS.length ? [['Next Level', () => load(S.lvl + 1)]] : []), ['Share', share], ['Menu', goLobby]]
   ), 900);
+}
+
+function startChallenge() {
+  safeRmSS();
+  S.chalActive = true;
+  S.chalTimeLeft = 120;
+  S.chalLevel = 0;
+  S.mode = 'chal';
+  S.t0 = 0; S.tk = 0; S.done = false;
+  $('#bC').classList.add('on');
+  load(0);
+}
+
+function endChallenge(completed) {
+  S.done = true;
+  S.chalActive = false;
+  clearInterval(S.auto);
+  S.auto = null;
+  safeRmSS();
+  const pts = S.chalLevel * 100 + Math.floor(S.chalTimeLeft);
+  const rec = { d: Date.now(), lvl: S.chalLevel, pts: pts, timeLeft: Math.floor(S.chalTimeLeft) };
+  P.chalRecords = P.chalRecords || [];
+  P.chalRecords.push(rec);
+  P.chalRecords.sort((a, b) => b.pts - a.pts);
+  P.chalRecords = P.chalRecords.slice(0, 20);
+  save();
+  if(completed) {
+    tone(660, .15, 0, 'triangle');
+    tone(880, .2, .15, 'triangle');
+  } else {
+    tone(100, .4);
+  }
+  setTimeout(() => {
+    ov(
+      `<h2>Challenge Selesai</h2>
+       <div style="line-height:1.8;margin-bottom:8px;">Level selesai: <b>${S.chalLevel}</b><br>
+       Sisa waktu: <b>${Math.floor(S.chalTimeLeft)}s</b></div>
+       <div style="font-size:32px;font-weight:900;color:var(--yel);text-shadow:0 0 16px var(--yel);">${pts} PTS</div>`,
+      [['Main Lagi', () => { $('#ov').hidden = true; startChallenge(); }],
+       ['Lihat Pencapaian', () => { $('#ov').hidden = true; showAchievements(); }],
+       ['Menu', goLobby]]
+    );
+  }, 600);
+}
+
+function showAchievements() {
+  const o = $('#ov');
+  const recs = P.chalRecords || [];
+  let html = '<h2 style="font-size:22px;letter-spacing:2px;margin-bottom:8px;">🏆 PENCAPAIAN</h2>';
+  if(recs.length === 0) {
+    html += '<div style="color:#888;padding:30px 20px;">Belum ada pencapaian.<br>Mainkan Challenge mode!</div>';
+  } else {
+    html += '<div style="max-height:55vh;overflow-y:auto;width:100%;max-width:320px;display:flex;flex-direction:column;gap:8px;padding:4px;">';
+    recs.forEach((r, i) => {
+      const d = new Date(r.d);
+      const pad = n => String(n).padStart(2, '0');
+      const dt = pad(d.getDate()) + '/' + pad(d.getMonth()+1) + '/' + d.getFullYear() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '·';
+      html += '<div style="display:grid;grid-template-columns:30px 1fr auto;gap:8px;padding:10px;background:rgba(255,255,255,.06);border-radius:10px;text-align:left;align-items:center;font-size:12px;border:1px solid rgba(255,255,255,.08);">'
+        + '<div style="font-size:20px;text-align:center;">' + medal + '</div>'
+        + '<div><div style="font-weight:900;color:var(--yel);font-size:16px;">' + r.pts + ' PTS</div>'
+        + '<div style="color:#888;font-size:10px;">Level ' + r.lvl + ' · ' + dt + '</div></div>'
+        + '<div style="color:#666;font-size:10px;">' + r.timeLeft + 's</div>'
+        + '</div>';
+    });
+    html += '</div>';
+  }
+  o.innerHTML = html;
+  const _willGoLobby = S.done && $('#lobby').style.display === 'none';
+  const c = document.createElement('button');
+  c.textContent = _willGoLobby ? 'MENU' : 'CLOSE';
+  c.style.marginTop = '10px';
+  c.style.padding = '10px 30px';
+  c.onclick = () => { o.hidden = true; if(_willGoLobby) goLobby(); };
+  o.append(c);
+  o.hidden = false;
+}
+
+function showShop() {
+  const o = $('#ov');
+  const unlocked = isAdmin ? themes.slice() : (P.unlockedThemes || ['black']);
+  let html = '<h2 style="font-size:22px;letter-spacing:2px;margin-bottom:4px;">🛒 SHOP</h2>';
+  html += '<div style="color:#ffd700;font-weight:900;font-size:20px;margin-bottom:14px;">⚡ ' + P.xp + ' XP</div>';
+  html += '<div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;">';
+  THEMES_SHOP.forEach((t, idx) => {
+    const owned = unlocked.includes(t.id);
+    const active = themes[S.theme] === t.id;
+    let btnLabel, btnStyle, disabled = false;
+    if(active) { btnLabel = '✓ DIPAKAI'; btnStyle = 'background:#333;color:#888;border-color:#333;'; disabled = true; }
+    else if(owned) { btnLabel = 'GUNAKAN'; btnStyle = 'background:linear-gradient(180deg,#5cffa6,#00a050);color:#003318;border-color:#5cffa6;'; }
+    else if(P.xp >= t.cost) { btnLabel = 'BELI ' + t.cost + ' XP'; btnStyle = 'background:linear-gradient(180deg,#ffd700,#cc9900);color:#221100;border-color:#ffd700;'; }
+    else { btnLabel = '🔒 ' + t.cost + ' XP'; btnStyle = 'background:#222;color:#666;border-color:#333;'; disabled = true; }
+    html += '<div style="display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center;padding:10px;background:rgba(255,255,255,.06);border-radius:10px;border:1px solid rgba(255,255,255,.08);">';
+    html += '<div style="width:48px;height:48px;border-radius:10px;background:' + t.preview + ';border:1px solid rgba(255,255,255,.2);"></div>';
+    html += '<div style="text-align:left;font-size:12px;"><div style="font-weight:800;font-size:14px;">' + t.name + '</div><div style="color:#888;font-size:10px;">' + (owned ? 'Dimiliki' : 'Belum dimiliki') + '</div></div>';
+    html += '<button class="shop-btn" data-idx="' + idx + '" style="padding:8px 10px;font-size:11px;font-weight:800;border-radius:8px;border:1px solid rgba(255,255,255,.15);white-space:nowrap;' + btnStyle + '" ' + (disabled ? 'disabled' : '') + '>' + btnLabel + '</button>';
+    html += '</div>';
+  });
+  const canBuyHint = P.xp >= HINT_COST;
+  const hintBtnStyle = canBuyHint ? 'background:linear-gradient(180deg,#ffd700,#cc9900);color:#221100;border-color:#ffd700;' : 'background:#222;color:#666;border-color:#333;';
+  html += '<div style="display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center;padding:10px;background:rgba(255,255,255,.06);border-radius:10px;border:1px solid rgba(255,255,255,.08);margin-top:4px;">';
+  html += '<div style="width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,#ffcc00,#ff8800);display:grid;place-items:center;font-size:24px;border:1px solid rgba(255,255,255,.2);">💡</div>';
+  html += '<div style="text-align:left;font-size:12px;"><div style="font-weight:800;font-size:14px;">Hint Extra</div><div style="color:#888;font-size:10px;">Punya: ' + (P.hintTokens || 0) + '</div></div>';
+  html += '<button id="shopHintBtn" style="padding:8px 10px;font-size:11px;font-weight:800;border-radius:8px;border:1px solid rgba(255,255,255,.15);white-space:nowrap;' + hintBtnStyle + '" ' + (canBuyHint ? '' : 'disabled') + '>BELI ' + HINT_COST + ' XP</button>';
+  html += '</div>';
+  html += '</div>';
+  o.innerHTML = html;
+  o.querySelectorAll('.shop-btn').forEach(b => {
+    b.onclick = () => {
+      const t = THEMES_SHOP[+b.dataset.idx];
+      const thIdx = themes.indexOf(t.id);
+      const isOwned = (P.unlockedThemes || ['black']).includes(t.id);
+      if(isOwned) {
+        S.theme = thIdx; P.theme = thIdx;
+        document.documentElement.dataset.theme = themes[thIdx];
+        save(); tone(440); showShop();
+      } else if(P.xp >= t.cost) {
+        P.xp -= t.cost;
+        P.unlockedThemes = P.unlockedThemes || ['black'];
+        P.unlockedThemes.push(t.id);
+        S.theme = thIdx; P.theme = thIdx;
+        document.documentElement.dataset.theme = themes[thIdx];
+        save();
+        tone(660, .1); tone(880, .15, .1);
+        showShop();
+      }
+    };
+  });
+  const hBtn = o.querySelector('#shopHintBtn');
+  if(hBtn) hBtn.onclick = () => {
+    if(P.xp < HINT_COST) return;
+    P.xp -= HINT_COST;
+    P.hintTokens = (P.hintTokens || 0) + 1;
+    save(); tone(520, .1); tone(780, .12, .1);
+    updateHintButton();
+    showShop();
+  };
+  const c = document.createElement('button');
+  c.textContent = 'CLOSE';
+  c.style.marginTop = '10px';
+  c.style.padding = '10px 30px';
+  c.onclick = () => { o.hidden = true; updateLobbyStats(); };
+  o.append(c);
+  o.hidden = false;
+}
+
+let tutStep = 0;
+const TUT_DATA = [
+  { icon: '👋', title: 'SELAMAT DATANG', desc: 'Di <b>Slide Master</b>.<br>Pecahkan teka-teki blok geser klasik dengan sentuhan modern.' },
+  { icon: '🎯', title: 'CARA BERMAIN', desc: 'Tujuan utamamu adalah mengeluarkan blok <span class="red-txt">MERAH (2x2)</span> melalui pintu keluar di bagian bawah papan.' },
+  { icon: '👆', title: 'KONTROL', desc: 'Cukup <b>Tap</b> blok lalu arahkan, atau langsung <b>Geser (Drag)</b> blok ke ruang kosong untuk memindahkannya.' },
+  { icon: '🏆', title: 'MODE & PENCAPAIAN', desc: '<b>Classic</b>: Main santai tanpa batas.<br><b>Challenge</b>: Balapan waktu selesaikan level sebanyak mungkin dan cetak rekor poin!' },
+  { icon: '🎨', title: 'KOLEKSI TEMA', desc: 'Kumpulkan <b>XP</b> dari setiap kemenangan.<br>Gunakan XP di <b>Shop</b> untuk membuka tema-tema premium dan hint tambahan.' }
+];
+
+function showTutorial() {
+  tutStep = 0;
+  $('#tut').hidden = false;
+  renderTut();
+}
+
+function renderTut() {
+  const d = TUT_DATA[tutStep];
+  const card = $('.tut-card');
+  card.style.animation = 'none';
+  void card.offsetWidth; 
+  card.style.animation = 'tutPop .5s cubic-bezier(.2,.9,.3,1) both';
+  
+  $('#tutIcon').textContent = d.icon;
+  $('#tutTitle').textContent = d.title;
+  $('#tutDesc').innerHTML = d.desc;
+  
+  const dotsHtml = TUT_DATA.map((_, i) => '<div class="tut-dot' + (i === tutStep ? ' on' : '') + '"></div>').join('');
+  $('#tutDots').innerHTML = dotsHtml;
+  
+  const isLast = tutStep === TUT_DATA.length - 1;
+  $('#tutNext').textContent = isLast ? 'MULAI MAIN' : 'LANJUT';
+  $('#tutSkip').style.display = isLast ? 'none' : 'block';
+  
+  if(isLast) {
+    $('#tutNext').style.background = 'linear-gradient(180deg, #5cffa6, #00a050)';
+    $('#tutNext').style.borderColor = '#5cffa6';
+    $('#tutNext').style.boxShadow = '0 5px 0 #004422, 0 10px 20px rgba(0,160,80,0.3)';
+    $('#tutNext').style.color = '#003318';
+  } else {
+    $('#tutNext').style.background = 'linear-gradient(180deg, #00B4FF, #0088CC)';
+    $('#tutNext').style.borderColor = '#5cd6ff';
+    $('#tutNext').style.boxShadow = '0 5px 0 #004466, 0 10px 20px rgba(0,180,255,0.3)';
+    $('#tutNext').style.color = '#fff';
+  }
+}
+
+function endTutorial() {
+  $('#tut').hidden = true;
+  P.tutDone = true;
+  save();
+  tone(660, .1); tone(880, .15, .1);
+}
+
+$('#tutNext').onclick = () => {
+  if(tutStep < TUT_DATA.length - 1) {
+    tutStep++;
+    tone(440, .05);
+    renderTut();
+  } else {
+    endTutorial();
+  }
+};
+
+$('#tutSkip').onclick = () => {
+  endTutorial();
+};
+
+function showStats() {
+  const o = $('#ov');
+  const rank = getRank(P.xp);
+  const next = getNextRank(P.xp);
+  const avg = P.total > 0 ? (P.xp / P.total).toFixed(1) : '0';
+  const best = (P.chalRecords && P.chalRecords[0]) ? P.chalRecords[0].pts : 0;
+  const runs = (P.chalRecords || []).length;
+  const rankPct = next ? Math.max(0, Math.min(100, Math.floor(((P.xp - rank.xp) / (next.xp - rank.xp)) * 100))) : 100;
+  let html = '<h2 style="font-size:22px;letter-spacing:2px;margin-bottom:8px;">📊 STATISTIK</h2>';
+  html += '<div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;text-align:left;font-size:13px;">';
+  html += '<div style="padding:12px;background:rgba(255,204,0,.1);border-radius:10px;border:1px solid rgba(255,204,0,.3);"><div style="color:#ffd700;font-weight:900;font-size:18px;">⭐ ' + rank.name + '</div><div style="color:#aaa;font-size:11px;margin-top:4px;">' + (next ? P.xp + ' / ' + next.xp + ' XP ke ' + next.name + ' (' + rankPct + '%)' : 'Rank tertinggi!') + '</div></div>';
+  const row = (icon, label, val) => '<div style="display:flex;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,.06);border-radius:8px;"><span style="color:#aaa;">' + icon + ' ' + label + '</span><b>' + val + '</b></div>';
+  html += row('⚡', 'Total XP', P.xp);
+  html += row('🏆', 'Level Solved', P.total);
+  html += row('📈', 'Rata-rata XP', avg + ' / level');
+  html += row('🔥', 'Win Streak', P.streak || 0);
+  html += row('🎯', 'Best Challenge', best + ' PTS');
+  html += row('🎮', 'Challenge Runs', runs + 'x');
+  html += row('💡', 'Hint Tokens', (P.hintTokens || 0));
+  html += '</div>';
+  o.innerHTML = html;
+  const c = document.createElement('button');
+  c.textContent = 'CLOSE';
+  c.style.marginTop = '10px';
+  c.style.padding = '10px 30px';
+  c.onclick = () => o.hidden = true;
+  o.append(c);
+  o.hidden = false;
 }
 
 function share() {
@@ -666,7 +1050,28 @@ function setLobbyMode(m, persist) {
   if(persist) { P.mode = m; save(); }
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
 }
+function abortChallenge() {
+  if(!S.chalActive) return;
+  S.chalActive = false;
+  S.mode = 'classic';
+  P.mode = 'classic';
+  save();
+  $('#bC').classList.remove('on');
+  clearInterval(S.auto);
+  S.auto = null;
+  const pts = S.chalLevel * 100 + Math.floor(S.chalTimeLeft);
+  if (pts > 0) {
+    const rec = { d: Date.now(), lvl: S.chalLevel, pts: pts, timeLeft: Math.floor(S.chalTimeLeft) };
+    P.chalRecords = P.chalRecords || [];
+    P.chalRecords.push(rec);
+    P.chalRecords.sort((a, b) => b.pts - a.pts);
+    P.chalRecords = P.chalRecords.slice(0, 20);
+    save();
+  }
+  safeRmSS();
+}
 function goLobby() {
+  abortChallenge();
   leaveGameHistory();
   $('#ov').hidden = true;
   $('#lobby').style.display = 'flex';
@@ -676,11 +1081,44 @@ function goLobby() {
 }
 
 function updateLobbyStats() {
-  if($('#lobby-stats')) $('#lobby-stats').innerHTML = `🏆 Solved: ${P.total} · ⚡ XP: ${P.xp}`;
+  const best = (P.chalRecords && P.chalRecords[0]) ? P.chalRecords[0].pts : 0;
+  const rank = getRank(P.xp);
+  const next = getNextRank(P.xp);
+  let rankLine;
+  if(next) {
+    const pct = Math.max(0, Math.min(100, Math.floor(((P.xp - rank.xp) / (next.xp - rank.xp)) * 100)));
+    rankLine = '<b style="color:#fff;">⭐ ' + rank.name + '</b> · ' + P.xp + '/' + next.xp + ' XP (' + pct + '%)';
+  } else {
+    rankLine = '<b style="color:#fff;">⭐ ' + rank.name + '</b> (MAX)';
+  }
+  const el = $('#lobby-stats');
+  if(el) {
+    el.innerHTML = rankLine + '<div style="font-size:11px;margin-top:4px;color:#888;display:flex;justify-content:center;gap:10px;"><span>🏆 ' + P.total + '</span><span>⚡ ' + P.xp + '</span><span>🎯 ' + best + '</span></div>';
+    el.style.cursor = 'pointer';
+    el.onclick = showStats;
+  }
 }
 
 setInterval(() => {
-  if(!S.t0 || S.done) return;
+  if(S.done) return;
+  if(S.chalActive) {
+    S.chalTimeLeft -= 0.1;
+    if(S.chalTimeLeft <= 0) {
+      S.chalTimeLeft = 0;
+      endChallenge();
+      return;
+    }
+    $('#tm').textContent = Math.ceil(S.chalTimeLeft) + 's';
+    const _tf = document.getElementById('tfill');
+    if(_tf) _tf.style.width = Math.min(100, Math.max(0, (S.chalTimeLeft/120)*100)) + '%';
+    if(S.chalTimeLeft < 10 && Math.ceil(S.chalTimeLeft) !== S.tk) {
+      S.tk = Math.ceil(S.chalTimeLeft);
+      tone(800, .03);
+      $('#msg').classList.add('warn');
+    }
+    return;
+  }
+  if(!S.t0) return;
   const e = (Date.now() - S.t0) / 1000;
   if(S.mode === 'chal') {
     const r = 120 - e; 
@@ -775,27 +1213,42 @@ addEventListener('keydown', e => {
 });
 
 $('#bL').onclick = () => {
-  if(S.done) return;
-  if(S.hintUses >= 5) return;
-  S.hintUses++;
+  if(S.done || S.hintLoading) return;
+  const base = 5 - S.hintUses;
+  if(base > 0) {
+    S.hintUses++;
+  } else if((P.hintTokens || 0) > 0) {
+    P.hintTokens--;
+    save();
+  } else {
+    return;
+  }
   S.hintActive = true;
-  const _rem = 5 - S.hintUses;
-  $('#bL').textContent = 'HINT (' + _rem + ')';
-  if(_rem === 0) $('#bL').disabled = true;
+  S.hintLoading = true;
+  updateHintButton();
   $('#msg').textContent = '⏳ Mencari petunjuk...';
   $('#msg').style.color = '';
   tone(520, .1); vib(15);
   showHint();
 };
 $('#bC').onclick = () => {
-  S.mode = S.mode === 'chal' ? 'classic' : 'chal';
-  $('#bC').classList.toggle('on', S.mode === 'chal');
-  $('#bL').classList.remove('on');
-  $('#msg').style.color = '';
-  load(S.lvl);
+  if(S.chalActive) {
+    if(!confirm('Keluar dari Challenge? Skor sekarang akan hilang.')) return;
+    S.chalActive = false;
+    S.mode = 'classic';
+    P.mode = 'classic';
+    save();
+    $('#bC').classList.remove('on');
+    load(S.lvl);
+  } else {
+    P.mode = 'chal';
+    save();
+    startChallenge();
+  }
 };
 $('#bP').onclick = () => load(S.lvl);
 $('#exit').onclick = () => {
+  abortChallenge();
   leaveGameHistory();
   updateLobbyStats();
   $('#lobby').style.display = 'flex';
@@ -817,6 +1270,8 @@ function openLevelSelect() {
         const fromLobby = $('#lobby').style.display !== 'none';
         o.hidden = true;
         if(fromLobby) {
+          S.chalActive = false; S.mode = 'classic'; P.mode = 'classic'; save(); safeRmSS();
+          $('#bC').classList.remove('on');
           $('#lobby').classList.add('lobby-exit');
           load(i);
           setTimeout(() => {
@@ -848,6 +1303,8 @@ $('#bLevels').onclick = openLevelSelect;
 
 document.querySelectorAll('.mode-btn').forEach(b => b.onclick = () => setLobbyMode(b.dataset.mode, true));
 setLobbyMode(S.mode, false);
+$('#bAch').onclick = showAchievements;
+$('#bShop').onclick = showShop;
 
 function showAdminUI() {
   isAdmin = true;
@@ -879,7 +1336,7 @@ function adminLogin() {
   const submit = () => {
     if(pwd.value === '170845') {
       showAdminUI();
-      try { sessionStorage.setItem('ss_admin', '1'); } catch(_) {}
+      try { localStorage.setItem('ss_admin', '1'); } catch(_) {}
       o.hidden = true;
       tone(660,.1); tone(880,.15,.1);
     } else {
@@ -897,7 +1354,7 @@ function adminLogin() {
 }
 function adminLogout() {
   hideAdminUI();
-  try { sessionStorage.removeItem('ss_admin'); } catch(_) {}
+  try { localStorage.removeItem('ss_admin'); } catch(_) {}
   tone(300,.1);
 }
 $('#adminBtn').onclick = () => isAdmin ? adminLogout() : adminLogin();
@@ -906,8 +1363,10 @@ $('#adminBtn').onclick = () => isAdmin ? adminLogout() : adminLogin();
 $('#bS').onclick = () => {
   if(S.auto || S.done) return;
   S.assist = true;
+  const g = genId;
   $('#msg').textContent = '⏳ Menganalisis...'; $('#msg').style.color = 'var(--blue)';
   ask(mv => {
+    if(g !== genId) return;
     if(!mv) { $('#msg').textContent = '⚠ Level tidak punya solusi'; $('#msg').style.color = 'var(--red)'; S.assist = false; return; }
     let i = 0;
     S.auto = setInterval(() => {
@@ -925,20 +1384,108 @@ $('#bEdit').onclick = () => {
       hist: S.hist
     }));
   } catch(_) {}
-  try { sessionStorage.setItem('ss_admin', '1'); } catch(_) {}
+  try { localStorage.setItem('ss_admin', '1'); } catch(_) {}
   window.location.href = 'editor.html';
 };
+async function forceUpdate() {
+  const o = $('#ov');
+  o.innerHTML = '<h2 style="font-size:22px;letter-spacing:2px;margin-bottom:10px;">🔄 FORCE UPDATE</h2><div id="fuMsg" style="color:#aaa;padding:20px 0;font-size:13px;">Memperbarui...</div>';
+  const msg = o.querySelector('#fuMsg');
+  o.hidden = false;
+  try {
+    if('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+      msg.textContent = 'Cache dihapus, mengambil level.json...';
+    }
+    const res = await fetch('level.json?t=' + Date.now(), { cache: 'no-store' });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if(!Array.isArray(data) || data.length === 0) throw new Error('Format level.json tidak valid');
+    LEVELS = data;
+    if(isAdmin) {
+      try {
+        const custom = JSON.parse(localStorage.getItem('slide_master_levels') || '[]');
+        if(Array.isArray(custom) && custom.length > 0) LEVELS = custom;
+      } catch(_) {}
+    }
+    if('serviceWorker' in navigator) {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.update()));
+      } catch(_) {}
+    }
+    safeRmSS();
+    if(P.lvl >= LEVELS.length) { P.lvl = 0; save(); }
+    msg.innerHTML = '<div style="color:#5cffa6;font-weight:800;font-size:14px;">✅ Berhasil!<br><br>' + LEVELS.length + ' level tersedia.</div>';
+    const reloadBtn = document.createElement('button');
+    reloadBtn.textContent = 'MULAI ULANG DARI LEVEL 1';
+    reloadBtn.style.cssText = 'padding:12px 20px;font-size:12px;font-weight:800;border-radius:10px;border:1px solid #5cffa6;background:linear-gradient(180deg,#5cffa6,#00a050);color:#003318;box-shadow:0 4px 0 #004422;margin-top:10px;letter-spacing:1px;';
+    reloadBtn.onclick = () => {
+      o.hidden = true;
+      if(safeGetSS()) safeRmSS();
+      S.chalActive = false; S.mode = 'classic'; P.mode = 'classic'; save();
+      $('#bC').classList.remove('on');
+      const fromLobby = $('#lobby').style.display !== 'none';
+      if(fromLobby) {
+        $('#lobby').classList.add('lobby-exit');
+        setTimeout(() => { $('#lobby').style.display = 'none'; $('#tools').classList.add('game-enter'); enterGameHistory(); }, 350);
+      }
+      load(0);
+    };
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'TUTUP';
+    closeBtn.style.cssText = 'padding:10px 30px;margin-top:10px;';
+    closeBtn.onclick = () => { o.hidden = true; updateLobbyStats(); };
+    o.append(reloadBtn, closeBtn);
+  } catch(err) {
+    msg.innerHTML = '<div style="color:#ff5c5c;font-size:13px;">❌ Gagal: ' + (err.message || err) + '</div>';
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'TUTUP';
+    closeBtn.style.cssText = 'padding:10px 30px;margin-top:10px;';
+    closeBtn.onclick = () => o.hidden = true;
+    o.append(closeBtn);
+  }
+}
+
 $('#bSettings').onclick = () => {
   const o = $('#ov');
   o.innerHTML = `<h2 style="font-size:24px;letter-spacing:2px;margin-bottom:10px;">SETTINGS</h2>
     <div style="display:flex;flex-direction:column;gap:12px;width:220px;margin:0 auto;">
       <button id="setSnd" style="padding:14px;font-size:14px;font-weight:800;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:linear-gradient(180deg,#444,#222);color:#fff;box-shadow:0 5px 0 #111;">Sound: ${S.snd ? 'ON' : 'OFF'}</button>
       <button id="setTheme" style="padding:14px;font-size:14px;font-weight:800;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:linear-gradient(180deg,#444,#222);color:#fff;box-shadow:0 5px 0 #111;">Theme: ${themes[S.theme].toUpperCase()}</button>
+      <button id="setTut" style="padding:14px;font-size:14px;font-weight:800;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:linear-gradient(180deg,#444,#222);color:#fff;box-shadow:0 5px 0 #111;">LIHAT TUTORIAL</button>
+      ${isAdmin ? '<button id="setForceUpd" style="padding:14px;font-size:13px;font-weight:900;border-radius:12px;border:1px solid rgba(92,255,166,0.5);background:linear-gradient(180deg,#2a5a3a,#0a2a1a);color:#5cffa6;box-shadow:0 5px 0 #001a0a;letter-spacing:1px;">FORCE UPDATE LEVEL</button>' : ''}
+      <button id="setReset" style="padding:14px;font-size:13px;font-weight:900;border-radius:12px;border:1px solid rgba(255,59,66,0.5);background:linear-gradient(180deg,#5a2a2a,#2a0a0a);color:#ff5c5c;box-shadow:0 5px 0 #1a0000;letter-spacing:1px;margin-top:10px;">RESET ALL DATA</button>
     </div>`;
   const s = o.querySelector('#setSnd');
   const t = o.querySelector('#setTheme');
   s.onclick = () => { S.snd = !S.snd; s.textContent = 'Sound: ' + (S.snd ? 'ON' : 'OFF'); tone(440); };
-  t.onclick = () => { S.theme = (S.theme + 1) % 3; document.documentElement.dataset.theme = themes[S.theme]; P.theme = S.theme; save(); t.textContent = 'Theme: ' + themes[S.theme].toUpperCase(); };
+  t.onclick = () => { S.theme = nextUnlockedTheme(); document.documentElement.dataset.theme = themes[S.theme]; P.theme = S.theme; save(); t.textContent = 'Theme: ' + themes[S.theme].toUpperCase(); };
+  o.querySelector('#setTut').onclick = () => { o.hidden = true; showTutorial(); };
+  const _fuBtn = o.querySelector('#setForceUpd');
+  if(_fuBtn) _fuBtn.onclick = () => { o.hidden = true; forceUpdate(); };
+  const _resetBtn = o.querySelector('#setReset');
+  if(_resetBtn) _resetBtn.onclick = () => {
+    if(!confirm('⚠️ PERINGATAN ⚠️\nSemua progres, XP, tema, dan pencapaian akan dihapus permanen. Lanjutkan?')) return;
+    if(!confirm('Apakah kamu 100% yakin ingin mereset semua data?')) return;
+    try {
+      localStorage.removeItem('ss');
+      localStorage.removeItem('ss_state');
+      localStorage.removeItem('ss_admin');
+      localStorage.removeItem('slide_master_levels');
+      sessionStorage.clear();
+      if('caches' in window) {
+        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
+          window.location.reload();
+        });
+      } else {
+        window.location.reload();
+      }
+    } catch(e) {
+      window.location.reload();
+    }
+  };
   const c = document.createElement('button');
   c.textContent = 'CLOSE';
   c.style.marginTop = '10px';
@@ -963,7 +1510,7 @@ $('#bOpt').onclick = () => {
   
   bBack.onclick = () => { o.hidden = true; goLobby(); };
   bSnd.onclick = () => { S.snd = !S.snd; bSnd.textContent = 'Sound: ' + (S.snd ? 'ON' : 'OFF'); tone(440); };
-  bTheme.onclick = () => { S.theme = (S.theme + 1) % 3; document.documentElement.dataset.theme = themes[S.theme]; P.theme = S.theme; save(); bTheme.textContent = 'Theme: ' + themes[S.theme].toUpperCase(); };
+  bTheme.onclick = () => { S.theme = nextUnlockedTheme(); document.documentElement.dataset.theme = themes[S.theme]; P.theme = S.theme; save(); bTheme.textContent = 'Theme: ' + themes[S.theme].toUpperCase(); };
   
   const c = document.createElement('button');
   c.textContent = 'CLOSE';
@@ -986,6 +1533,19 @@ function resumeGame() {
       S.moves = saved.moves;
       S.hist = saved.hist;
       S.t0 = 0; S.done = false; S.sel = null; S.redo = []; S.assist = false; S.auto = null;
+      S.hintUses = 0; S.hintActive = false; S.hintLoading = false;
+      updateHintButton();
+      if(saved.chalActive) {
+        S.chalActive = true;
+        S.chalTimeLeft = saved.chalTimeLeft || 60;
+        S.chalLevel = saved.chalLevel || 0;
+        S.mode = 'chal';
+        $('#bC').classList.add('on');
+      } else {
+        S.chalActive = false;
+        S.mode = saved.mode === 'chal' ? 'classic' : (saved.mode || 'classic');
+        $('#bC').classList.remove('on');
+      }
       inner.innerHTML = '';
       inner.classList.remove('reveal');
       inner.classList.add('waiting-reveal');
@@ -1009,9 +1569,11 @@ if(P.lvl > 0 || safeGetSS()) $('#bPlay').textContent = '▶ RESUME GAME';
 $('#bPlay').onclick = () => {
   $('#lobby').classList.add('lobby-exit');
   if(safeGetSS()) {
-    if(!resumeGame()) load(P.lvl || 0);
+    if(!resumeGame()) {
+      if(P.mode === 'chal') startChallenge(); else load(P.lvl || 0);
+    }
   } else {
-    load(P.lvl || 0);
+    if(P.mode === 'chal') startChallenge(); else load(P.lvl || 0);
   }
   setTimeout(() => {
     $('#lobby').style.display = 'none';
@@ -1022,6 +1584,8 @@ $('#bPlay').onclick = () => {
 
 $('#bRand').onclick = () => {
   $('#lobby').classList.add('lobby-exit');
+  S.chalActive = false; S.mode = 'classic'; P.mode = 'classic'; save(); safeRmSS();
+  $('#bC').classList.remove('on');
   const _open = LEVELS.map((_, i) => i).filter(i => isAdmin || i === 0 || P.best[i-1] !== undefined || i <= (P.max || 0) + 1);
   load(_open.length ? _open[Math.floor(Math.random() * _open.length)] : 0);
   setTimeout(() => { $('#lobby').style.display = 'none'; $('#tools').classList.add('game-enter'); enterGameHistory(); }, 350);
@@ -1071,6 +1635,7 @@ fetch('level.json')
     }
     load(P.lvl || 0);
     updateLobbyStats();
+    if(!P.tutDone) setTimeout(showTutorial, 600);
   })
   .catch(err => {
     console.warn("Gagal load level.json. Pastikan pakai Spck Live Server.", err);
@@ -1083,6 +1648,7 @@ fetch('level.json')
     ]];
     load(P.lvl || 0);
     updateLobbyStats();
+    if(!P.tutDone) setTimeout(showTutorial, 600);
   });
 </script>
 </body>
