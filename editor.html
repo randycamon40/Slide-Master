@@ -1,978 +1,509 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#121212">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0c0d1a">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Pro Level Editor - Slide Master</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@500;600;700&display=swap" rel="stylesheet">
+<title>Slide Master · Level Editor</title>
 <style>
-:root {
-  --bg: #121212; --surface: #1e1e1e; --surface-light: #2a2a2a;
-  --text: #e0e0e0; --text-muted: #888;
-  --red: #FF3B42; --blue: #00B4FF; --yel: #FFCC00; --grn: #00E676;
-  --primary: #4CAF50; --danger: #f44336; --info: #2196F3;
-}
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: manipulation; font-family: system-ui, -apple-system, sans-serif; }
-body { margin: 0; padding: 15px; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-
-/* Header */
-.header { width: 100%; max-width: 340px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 8px; }
-.header h1 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 1px; color: var(--text); }
-.header .stats { font-size: 11px; color: var(--text-muted); background: var(--surface); padding: 6px 10px; border-radius: 6px; }
-.header .back-btn { font-size: 11px; color: var(--text-muted); text-decoration: none; padding: 6px 10px; background: var(--surface); border-radius: 6px; }
-
-/* Papan Grid */
-#board-wrapper { width: 100%; max-width: 340px; padding: 10px; background: var(--surface); border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); margin-bottom: 20px; }
-#grid { 
-  --pad: 8px;
-  --gap: 4px;
-  --cell-w: calc((100% - (2 * var(--pad)) - (3 * var(--gap))) / 4);
-  --cell-h: calc((100% - (2 * var(--pad)) - (4 * var(--gap))) / 5);
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); 
-  background: #0a0a0a; padding: var(--pad); border-radius: 12px; 
-  width: 100%; aspect-ratio: 4/5; position: relative;
-  border: 1px solid #333; box-shadow: inset 0 4px 10px rgba(0,0,0,0.8);
-}
-.cell { background: rgba(255,255,255,0.05); border-radius: 6px; cursor: pointer; }
-.piece { 
-  position: absolute; border-radius: 6px; pointer-events: none; 
-  box-shadow: inset 0 3px 5px rgba(255,255,255,0.3), inset 0 -3px 5px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.5);
-  display: flex; align-items: center; justify-content: center; font-size: 22px;
-  transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275); animation: pop-in 0.2s ease-out;
-}
-@keyframes pop-in { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-.t_r { background: var(--red); color: rgba(0,0,0,0.2); }
-.t_v { background: var(--blue); color: rgba(0,0,0,0.2); }
-.t_h { background: var(--grn); color: rgba(0,0,0,0.2); }
-.t_y { background: var(--yel); color: rgba(0,0,0,0.2); }
-
-/* Toolbar */
-.toolbar { width: 100%; max-width: 340px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px; }
-.tool-btn { 
-  width: 58px; height: 58px; border-radius: 12px; border: 2px solid transparent; 
-  display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 800; font-size: 10px; color: #000;
-  box-shadow: 0 4px 0 rgba(0,0,0,0.6); cursor: pointer; transition: all 0.1s; line-height: 1.2; text-align: center;
-}
-.tool-btn.active { border-color: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.5), 0 2px 0 rgba(0,0,0,0.6); transform: translateY(2px); }
-.tool-btn[data-type="r"] { background: var(--red); width: 72px; }
-.tool-btn[data-type="v"] { background: var(--blue); }
-.tool-btn[data-type="h"] { background: var(--grn); width: 72px; }
-.tool-btn[data-type="y"] { background: var(--yel); }
-.tool-btn[data-type="x"] { background: var(--surface-light); color: #fff; border-color: #444; }
-
-/* Controls */
-.controls { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; }
-.row { display: flex; gap: 10px; width: 100%; }
-button { flex: 1; padding: 14px 10px; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; transition: opacity 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-button:active { opacity: 0.8; transform: scale(0.98); }
-button:disabled { opacity: 0.4; pointer-events: none; }
-.btn-primary { background: var(--primary); color: white; }
-.btn-danger { background: var(--danger); color: white; }
-.btn-info { background: var(--info); color: white; }
-.btn-dark { background: var(--surface-light); color: white; border: 1px solid #444; }
-.btn-ai { background: linear-gradient(135deg, #a855f7, #6366f1); color: white; }
-.btn-solve { background: linear-gradient(135deg, #f59e0b, #f97316); color: #1a1a1a; font-weight: 900; }
-
-/* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 100; display: none; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
-.modal-content { width: 100%; max-width: 340px; background: var(--surface); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
-.modal-header h2 { margin: 0; font-size: 16px; }
-.close-btn { background: transparent; border: none; color: var(--text-muted); font-size: 24px; padding: 0; box-shadow: none; width: auto; cursor: pointer; }
-
-.level-list { display: flex; flex-direction: column; gap: 10px; max-height: 50vh; overflow-y: auto; padding-right: 5px; }
-.level-item { background: var(--surface-light); padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 15px; border: 1px solid #333; }
-.mini-grid { width: 50px; height: 62.5px; background: #0a0a0a; border-radius: 6px; position: relative; flex-shrink: 0; border: 1px solid #444; }
-.mini-piece { position: absolute; border-radius: 2px; }
-.level-info { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-.level-title { font-weight: bold; font-size: 14px; }
-.level-actions { display: flex; gap: 5px; }
-.action-btn { padding: 6px 10px; font-size: 12px; border-radius: 6px; box-shadow: none; flex: initial; }
-
-/* Form fields */
-.fld { display: flex; flex-direction: column; gap: 5px; }
-.fld label { font-size: 12px; color: var(--text-muted); }
-.fld input, .fld select, .fld textarea { padding: 10px; border-radius: 8px; background: var(--surface-light); color: var(--text); border: 1px solid #444; font-size: 13px; font-family: inherit; }
-.fld input:focus, .fld select:focus { outline: 1px solid var(--info); }
-
-/* Toast */
-#toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: #333; color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 200; box-shadow: 0 5px 15px rgba(0,0,0,0.5); max-width: 90vw; text-align: center; }
-#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-#toast.error { background: var(--danger); }
-#toast.success { background: var(--primary); }
-#toast.info { background: var(--info); }
-
-/* Animasi Solve Moves */
-#animBar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #222; padding: 10px 16px; border-radius: 30px; box-shadow: 0 6px 24px rgba(0,0,0,0.7), 0 0 0 2px rgba(255,255,255,0.1); z-index: 150; display: none; align-items: center; gap: 10px; color: #fff; font-size: 13px; font-weight: 800; white-space: nowrap; }
-#animBar.active { display: flex; }
-#animBar button { flex: initial; padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 20px; box-shadow: none; }
-#animPause { background: #444; color: #fff; }
-#animStop { background: #c62828; color: #fff; }
-#grid.anim-mode .piece { transition: left 0.32s cubic-bezier(.4,.2,.3,1), top 0.32s cubic-bezier(.4,.2,.3,1); }
-.piece.anim-moving { outline: 3px solid #fff; outline-offset: -3px; z-index: 10; filter: brightness(1.25); }
-.piece.anim-win { outline: 3px solid #00E676; outline-offset: -3px; box-shadow: 0 0 0 3px rgba(0,230,118,0.5), 0 0 30px rgba(0,230,118,0.9); z-index: 10; }
+:root{--bg:#121212;--card:#1e1e24;--card2:#2a2a35;--line:rgba(255,255,255,.1);--tx:#f1f1f1;--mut:#9a9aab;--ac:#7c6cff;--ac2:#35d0ff;--ok:#3ddc97;--bad:#ff5b6e;--warn:#ffc545;
+--r:#ff5b6e;--v:#35b8ff;--h:#3ddc97;--y:#ffc545;--disp:'Bricolage Grotesque',system-ui,sans-serif;--body:'Figtree',system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:var(--body)}
+body{margin:0;background:var(--bg);color:var(--tx);min-height:100vh;display:flex;justify-content:center;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+input,textarea,select{user-select:text;-webkit-user-select:text}
+.app{width:100%;max-width:440px;padding:max(14px,env(safe-area-inset-top)) 14px calc(96px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.top{display:flex;align-items:center;gap:10px}
+.brand{flex:1;min-width:0}.brand b{font:800 22px/1 var(--disp);letter-spacing:-.5px;display:block}.brand small{color:var(--mut);font-size:12px;font-weight:600}
+.back{display:flex;align-items:center;gap:4px;color:var(--tx);text-decoration:none;font-size:13px;font-weight:700;padding:9px 13px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px 12px}
+.stat span{display:block;font-size:11px;color:var(--mut);font-weight:600}.stat b{font:800 18px var(--disp)}
+.stat.full b{color:var(--warn)}
+.board{padding:10px;background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:26px;box-shadow:0 20px 50px rgba(0,0,0,.45)}
+#grid{--pad:8px;--gap:5px;--cell-w:calc((100% - (2 * var(--pad)) - (3 * var(--gap))) / 4);--cell-h:calc((100% - (2 * var(--pad)) - (4 * var(--gap))) / 5);
+display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap);padding:var(--pad);width:100%;aspect-ratio:4/5;position:relative;background:#0a0a0f;border-radius:18px;box-shadow:inset 0 6px 18px rgba(0,0,0,.7)}
+.cell{background:rgba(255,255,255,.045);border-radius:9px;cursor:pointer}
+#grid::after{content:"";position:absolute;left:calc(var(--pad) + var(--cell-w) + var(--gap));top:calc(var(--pad) + 3 * (var(--cell-h) + var(--gap)));width:calc(2 * var(--cell-w) + var(--gap));height:calc(2 * var(--cell-h) + var(--gap));border:2px dashed rgba(255,255,255,.22);border-radius:10px;pointer-events:none}
+.piece{position:absolute;border-radius:11px;pointer-events:none;display:flex;align-items:center;justify-content:center;font-size:20px;color:rgba(0,0,0,.28);box-shadow:inset 0 3px 0 rgba(255,255,255,.4),inset 0 -4px 0 rgba(0,0,0,.25),0 6px 12px rgba(0,0,0,.45);animation:pop .22s ease-out}
+@keyframes pop{from{transform:scale(.82);opacity:0}to{transform:scale(1);opacity:1}}
+.t_r{background:linear-gradient(150deg,#ff8a95,var(--r))}.t_r::after{content:"★"}
+.t_v{background:linear-gradient(150deg,#7fd6ff,var(--v))}.t_v::after{content:"◆"}
+.t_h{background:linear-gradient(150deg,#86efbd,var(--h))}.t_h::after{content:"■"}
+.t_y{background:linear-gradient(150deg,#ffe08a,var(--y))}.t_y::after{content:"●"}
+#grid.anim .piece{transition:left .32s cubic-bezier(.4,.2,.3,1),top .32s cubic-bezier(.4,.2,.3,1)}
+.play .piece{pointer-events:auto;cursor:grab;touch-action:none;transition:left .14s,top .14s}
+.piece.mv{outline:3px solid #fff;outline-offset:-3px;z-index:5;filter:brightness(1.2)}
+.piece.win{outline:3px solid var(--ok);outline-offset:-3px;box-shadow:0 0 0 3px rgba(61,220,151,.5),0 0 30px rgba(61,220,151,.9);z-index:5}
+.tools{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.tool{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 2px 8px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;cursor:pointer;color:var(--mut);font-size:11px;font-weight:700;text-align:center;transition:.15s}
+.tool .sw{height:24px;display:flex;align-items:center;justify-content:center}.tool .sw i{display:block;border-radius:5px}
+.tool.active{color:var(--tx);border-color:var(--ac);background:var(--card2);box-shadow:0 0 0 3px rgba(124,108,255,.25)}
+.dock{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.dock button:not(.wide){padding:10px 4px;font-size:12px;font-weight:600;color:var(--mut)}
+button{font:700 13px var(--body);color:var(--tx);border:1px solid var(--line);background:var(--card);border-radius:16px;padding:12px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;transition:transform .1s,opacity .2s}
+button:active{transform:scale(.96)}button:disabled{opacity:.35;pointer-events:none}
+button.wide{grid-column:span 4;flex-direction:row;gap:8px;padding:15px;font-size:15px}
+.pri{background:linear-gradient(135deg,var(--ac),#5a8dff);border:0}
+.ai{background:linear-gradient(135deg,#c06bff,var(--ac));border:0}
+.slv{background:linear-gradient(135deg,var(--warn),#ff9a3d);color:#2a1700;border:0}
+.neu{background:var(--card2)}.dng{color:var(--bad)}
+.lock .dock,.lock .tools,.lock .cell,.lock .nav{pointer-events:none;opacity:.45}
+.ov{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);display:none;align-items:flex-end;justify-content:center}
+.ov.open{display:flex}
+.sheet{width:100%;max-width:440px;max-height:90vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:28px 28px 0 0;padding:18px 16px max(20px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px;animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.sh{display:flex;align-items:center;justify-content:space-between}.sh h2{margin:0;font:800 20px var(--disp)}
+.x{width:38px;height:38px;padding:0;border-radius:12px;background:var(--card2)}
+.list{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow:auto}
+.lvl{display:flex;gap:12px;align-items:center;padding:10px;background:var(--card2);border-radius:16px;border:1px solid var(--line)}
+.mini{width:48px;aspect-ratio:4/5;background:#0a0a0f;border-radius:8px;position:relative;flex:none}.mini i{position:absolute;border-radius:2px}
+.li{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}.lt{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:14px}
+.bd{font-size:11px;font-weight:700;color:var(--mut);padding:3px 8px;border-radius:20px;border:1px solid var(--line)}
+.la{display:flex;gap:6px}.la button{flex-direction:row;padding:7px 12px;border-radius:10px;font-size:12px;gap:5px}
+.fld{display:flex;flex-direction:column;gap:6px}.fld label{font-size:12px;color:var(--mut);font-weight:700}
+.fld input,.fld select,.fld textarea{padding:12px;border-radius:12px;background:var(--card2);color:var(--tx);border:1px solid var(--line);font-size:14px;outline:0}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--ac)}
+textarea{min-height:160px;font-family:ui-monospace,monospace!important;font-size:12px!important;resize:vertical}
+.row{display:flex;gap:8px}.row button{flex:1;flex-direction:row;gap:6px;padding:13px}
+.st{font-size:12px;padding:11px;border-radius:12px;background:var(--card2);color:var(--mut);text-align:center;font-weight:600}
+.st.ok{background:rgba(61,220,151,.14);color:var(--ok)}.st.err{background:rgba(255,91,110,.14);color:var(--bad)}.st.wait{background:rgba(53,208,255,.14);color:var(--ac2)}
+.mv-i{display:flex;gap:10px;align-items:center;padding:10px;background:var(--card2);border-radius:12px;border-left:4px solid}
+.bar{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:40;display:none;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);padding:8px 10px 8px 16px;border-radius:40px;box-shadow:0 12px 36px rgba(0,0,0,.6);font-weight:800;font-size:13px;white-space:nowrap}
+.bar.on{display:flex}.bar button{flex-direction:row;padding:9px 14px;border-radius:30px}
+#toast{position:fixed;top:max(16px,env(safe-area-inset-top));left:50%;transform:translate(-50%,-20px);background:var(--card2);border:1px solid var(--line);padding:12px 20px;border-radius:30px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:.3s;z-index:200;max-width:92vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#toast.show{opacity:1;transform:translate(-50%,0)}#toast.error{background:#4a1823;color:#ffb3bc}#toast.success{background:#12382b;color:#9bf0c9}#toast.info{background:#12304a;color:#a8e3ff}
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:max(10px,env(safe-area-inset-bottom));width:calc(100% - 20px);max-width:420px;z-index:30;display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:6px;background:rgba(30,30,36,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:26px;box-shadow:0 12px 36px rgba(0,0,0,.55)}
+.nav button{border:0;background:none;padding:9px 2px 7px;font-size:11px;font-weight:700;color:var(--mut);border-radius:20px;gap:4px}
+.nav button:active{background:var(--card)}.nav .hl{color:#c9b8ff}
+.opt{flex-direction:row!important;justify-content:flex-start!important;gap:14px!important;padding:14px 16px!important;text-align:left;border-radius:18px}
+.opt span{display:flex;flex-direction:column;gap:2px;font-size:14px}.opt small{font-size:12px;color:var(--mut);font-weight:500}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+:focus-visible{outline:2px solid var(--ac2);outline-offset:2px}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
+<symbol id="redo" viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></symbol>
+<symbol id="trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></symbol>
+<symbol id="save" viewBox="0 0 24 24"><path d="M5 3h11l4 4v14H5z"/><path d="M8 3v5h7M8 21v-7h8v7"/></symbol>
+<symbol id="list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+<symbol id="imp" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></symbol>
+<symbol id="exp" viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></symbol>
+<symbol id="tgt" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></symbol>
+<symbol id="steps" viewBox="0 0 24 24"><path d="M4 18h5v-5h5V8h6"/><path d="M17 5l3 3-3 3"/></symbol>
+<symbol id="spark" viewBox="0 0 24 24"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2zM19 16l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></symbol>
+<symbol id="play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+<symbol id="mir" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M8 7 3 17h5zM16 7l5 10h-5z"/></symbol>
+<symbol id="edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+<symbol id="x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+<symbol id="back" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+<symbol id="pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+<symbol id="rst" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+</defs></svg>
 
-<div class="header">
-  <h1>LEVEL EDITOR</h1>
-  <div class="stats" id="stats">Levels: 0 | Cells: 0/18</div>
-  <a href="index.html" class="back-btn">← Game</a>
-</div>
-
-<div id="board-wrapper">
-  <div id="grid"></div>
-</div>
-
-<div class="toolbar">
-  <div class="tool-btn active" data-type="r">MERAH<br>2x2</div>
-  <div class="tool-btn" data-type="v">BIRU<br>1x2</div>
-  <div class="tool-btn" data-type="h">HIJAU<br>2x1</div>
-  <div class="tool-btn" data-type="y">KUNING<br>1x1</div>
-  <div class="tool-btn" data-type="x">HAPUS<br>🗑️</div>
-</div>
-
-<div class="controls">
-  <div class="row">
-    <button class="btn-dark" id="btnUndo" disabled>↩ Undo</button>
-    <button class="btn-dark" id="btnRedo" disabled>↪ Redo</button>
-    <button class="btn-danger" id="btnClear">🗑️ Clear</button>
+<main class="app" id="app">
+  <header class="top">
+    <div class="brand"><b>Level Editor</b><small>Slide Master</small></div>
+    <a href="index.html" class="back"><svg class="i"><use href="#back"/></svg>Game</a>
+  </header>
+  <div class="stats">
+    <div class="stat"><span>Level</span><b id="sLv">1</b></div>
+    <div class="stat" id="sCW"><span>Cells</span><b id="sCells">0/18</b></div>
+    <div class="stat"><span>Empty</span><b id="sEmpty">20</b></div>
   </div>
-  <div class="row">
-    <button class="btn-primary" id="btnSave" style="flex: 2;">💾 Simpan Level</button>
-    <button class="btn-info" id="btnOpenList" style="flex: 1;">📋 List (0)</button>
+  <div class="board"><div id="grid"></div></div>
+  <div class="tools">
+    <div class="tool active" data-type="r"><div class="sw"><i style="width:24px;height:24px;background:var(--r)"></i></div>Merah 2x2</div>
+    <div class="tool" data-type="v"><div class="sw"><i style="width:12px;height:24px;background:var(--v)"></i></div>Biru 1x2</div>
+    <div class="tool" data-type="h"><div class="sw"><i style="width:24px;height:12px;background:var(--h)"></i></div>Hijau 2x1</div>
+    <div class="tool" data-type="y"><div class="sw"><i style="width:12px;height:12px;background:var(--y)"></i></div>Kuning 1x1</div>
+    <div class="tool" data-type="x"><div class="sw"><svg class="i"><use href="#trash"/></svg></div>Hapus</div>
   </div>
-  <div class="row">
-    <button class="btn-dark" id="btnImport" style="font-size: 11px;">📥 Import JSON</button>
-    <button class="btn-dark" id="btnExport" style="font-size: 11px;">📤 Export JSON</button>
+  <div class="dock">
+    <button id="btnUndo" disabled><svg class="i"><use href="#undo"/></svg>Undo</button>
+    <button id="btnRedo" disabled><svg class="i"><use href="#redo"/></svg>Redo</button>
+    <button id="btnMirror"><svg class="i"><use href="#mir"/></svg>Mirror</button>
+    <button id="btnClear" class="dng"><svg class="i"><use href="#trash"/></svg>Clear</button>
+    <button id="btnSave" class="pri wide"><svg class="i"><use href="#save"/></svg><span id="saveTxt">Simpan Level</span></button>
   </div>
-  <div class="row">
-    <button class="btn-solve" id="btnSolve">🎯 Solve</button>
-    <button class="btn-solve" id="btnSolveMoves">👣 Moves</button>
-    <button class="btn-ai" id="btnAI">🤖 AI</button>
-  </div>
-</div>
+</main>
 
-<!-- Modal Daftar Level -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>Daftar Level Tersimpan</h2>
-      <button class="close-btn" id="btnCloseModal">×</button>
-    </div>
-    <div class="level-list" id="levelListContainer"></div>
-    <button class="btn-primary" id="btnCreateNew">+ Buat Level Baru</button>
-  </div>
-</div>
+<div class="ov" id="modalOverlay"><div class="sheet">
+  <div class="sh"><h2>Daftar Level</h2><button class="x" data-close="modalOverlay"><svg class="i"><use href="#x"/></svg></button></div>
+  <div class="list" id="levelListContainer"></div>
+  <button class="pri" id="btnCreateNew" style="flex-direction:row;padding:14px">+ Buat level baru</button>
+</div></div>
 
-<!-- Modal AI -->
-<div class="modal-overlay" id="aiModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>🤖 AI Puzzle Generator</h2>
-      <button class="close-btn" id="btnCloseAIModal">×</button>
-    </div>
-    
-    <div class="fld">
-      <label>Provider</label>
-      <select id="aiProvider">
-        <option value="openai">OpenAI</option>
-        <option value="gemini">Google Gemini</option>
-        <option value="groq">Groq</option>
-        <option value="openrouter">OpenRouter</option>
-        <option value="custom">Custom (OpenAI-compatible)</option>
-      </select>
-    </div>
-    
-    <div class="fld">
-      <label>Model</label>
-      <input id="aiModel" type="text" placeholder="gpt-4o-mini" autocomplete="off">
-    </div>
-    
-    <div class="fld">
-      <label>API Key</label>
-      <input id="aiApiKey" type="password" placeholder="sk-..." autocomplete="off">
-    </div>
-    
-    <div class="fld" id="aiBaseUrlWrap" style="display:none;">
-      <label>Base URL</label>
-      <input id="aiBaseUrl" type="text" placeholder="https://api.example.com/v1/chat/completions" autocomplete="off">
-    </div>
-    
-    <div class="row" style="margin-top:6px;">
-      <button class="btn-info" id="btnAITest" style="font-size:12px;">🔌 Test</button>
-      <button class="btn-primary" id="btnAISave" style="font-size:12px;">💾 Save</button>
-    </div>
-    
-    <div id="aiStatus" style="font-size:12px;padding:10px 12px;border-radius:8px;background:var(--surface-light);text-align:center;color:var(--text-muted);">⚪ Belum dites</div>
-    
-    <hr style="border:none;border-top:1px solid #333;margin:4px 0;">
-    
-    <button class="btn-ai" id="btnAIGenerate" style="padding:16px;font-size:14px;font-weight:900;">🎲 Generate Puzzle</button>
-    <div id="aiGenStatus" style="font-size:11px;color:var(--text-muted);text-align:center;">Klik untuk generate puzzle dengan AI</div>
-  </div>
-</div>
+<div class="ov" id="impModal"><div class="sheet">
+  <div class="sh"><h2>Import JSON</h2><button class="x" data-close="impModal"><svg class="i"><use href="#x"/></svg></button></div>
+  <div class="fld"><label>Tempel kode JSON level</label><textarea id="impTxt" placeholder='[[["r",1,0],["v",0,0]]]'></textarea></div>
+  <button class="pri" id="impGo" style="flex-direction:row;padding:14px">Import level</button>
+</div></div>
 
-<div class="modal-overlay" id="movesModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>👣 Solve Moves</h2>
-      <button class="close-btn" id="btnCloseMovesModal">×</button>
-    </div>
-    <div id="movesSummary" style="font-size:12px;color:var(--text-muted);text-align:center;padding:8px;background:var(--surface-light);border-radius:8px;"></div>
-    <div id="movesList" style="max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:2px;"></div>
-    <button class="btn-primary" id="btnCloseMovesBottom">Tutup</button>
-  </div>
-</div>
+<div class="ov" id="aiModal"><div class="sheet">
+  <div class="sh"><h2>AI Puzzle Generator</h2><button class="x" data-close="aiModal"><svg class="i"><use href="#x"/></svg></button></div>
+  <div class="fld"><label>Provider</label><select id="aiProvider"><option value="openai">OpenAI</option><option value="gemini">Google Gemini</option><option value="groq">Groq</option><option value="openrouter">OpenRouter</option><option value="custom">Custom (OpenAI-compatible)</option></select></div>
+  <div class="fld"><label>Model</label><input id="aiModel" placeholder="gpt-4o-mini" autocomplete="off"></div>
+  <div class="fld"><label>API Key</label><input id="aiApiKey" type="password" placeholder="sk-..." autocomplete="off"></div>
+  <div class="fld" id="aiBaseUrlWrap" style="display:none"><label>Base URL</label><input id="aiBaseUrl" placeholder="https://api.example.com/v1/chat/completions" autocomplete="off"></div>
+  <div class="row"><button class="neu" id="btnAITest">Test koneksi</button><button class="neu" id="btnAISave">Simpan</button></div>
+  <div class="st" id="aiStatus">Belum dites</div>
+  <button class="ai" id="btnAIGenerate" style="flex-direction:row;padding:16px;font-size:15px"><svg class="i"><use href="#spark"/></svg>Generate puzzle</button>
+  <div class="st" id="aiGenStatus" style="background:none">Generate puzzle dengan AI sesuai tingkat kesulitan level</div>
+</div></div>
 
-<div id="animBar">
-  <span id="animLabel">▶ 0/0</span>
-  <button id="animPause">⏸ Pause</button>
-  <button id="animStop">✕ Stop</button>
-</div>
+<div class="ov" id="movesModal"><div class="sheet">
+  <div class="sh"><h2>Langkah Solusi</h2><button class="x" data-close="movesModal"><svg class="i"><use href="#x"/></svg></button></div>
+  <div class="st" id="movesSummary"></div>
+  <div class="list" id="movesList"></div>
+  <button class="pri" data-close="movesModal" style="flex-direction:row;padding:14px">Tutup</button>
+</div></div>
 
-<div id="toast">Pesan</div>
+<div class="ov" id="dlg" style="align-items:center"><div class="sheet" style="border-radius:24px;max-width:360px;margin:16px">
+  <div id="dlgMsg" style="font-weight:700;font-size:15px;line-height:1.4"></div>
+  <div class="row"><button class="neu" id="dlgNo">Batal</button><button class="pri" id="dlgOk">Lanjut</button></div>
+</div></div>
+
+<nav class="nav" id="nav">
+  <button id="btnOpenList"><svg class="i"><use href="#list"/></svg><span id="listTxt">List (0)</span></button>
+  <button id="btnPlay"><svg class="i"><use href="#play"/></svg>Play-Test</button>
+  <button id="navSolve"><svg class="i"><use href="#tgt"/></svg>Solve</button>
+  <button id="btnAI" class="hl"><svg class="i"><use href="#spark"/></svg>AI</button>
+  <button id="navData"><svg class="i"><use href="#exp"/></svg>Data</button>
+</nav>
+
+<div class="ov" id="solveSheet"><div class="sheet">
+  <div class="sh"><h2>Solve</h2><button class="x" data-close="solveSheet"><svg class="i"><use href="#x"/></svg></button></div>
+  <button class="opt slv" id="btnSolve"><svg class="i"><use href="#tgt"/></svg><span>Cek solusi<small>Pastikan level bisa diselesaikan</small></span></button>
+  <button class="opt slv" id="btnSolveMoves"><svg class="i"><use href="#steps"/></svg><span>Putar langkah solusi<small>Animasi solusi optimal di papan</small></span></button>
+</div></div>
+
+<div class="ov" id="dataSheet"><div class="sheet">
+  <div class="sh"><h2>Data level</h2><button class="x" data-close="dataSheet"><svg class="i"><use href="#x"/></svg></button></div>
+  <button class="opt neu" id="btnImport"><svg class="i"><use href="#imp"/></svg><span>Import JSON<small>Tempel kode level</small></span></button>
+  <button class="opt neu" id="btnExport"><svg class="i"><use href="#exp"/></svg><span>Export JSON<small>Unduh level.json dan salin ke clipboard</small></span></button>
+</div></div>
+
+<div class="bar" id="animBar"><span id="animLabel"></span><button class="neu" id="animPause"><svg class="i"><use href="#pause"/></svg>Pause</button><button class="neu dng" id="animStop"><svg class="i"><use href="#x"/></svg>Stop</button></div>
+<div class="bar" id="playBar"><span id="playLabel">Langkah 0</span><button class="neu" id="playReset"><svg class="i"><use href="#rst"/></svg>Reset</button><button class="neu dng" id="playExit"><svg class="i"><use href="#x"/></svg>Keluar</button></div>
+<div id="toast"></div>
 
 <script>
-// === KONFIGURASI ===
-const DIM = { r:[2,2], v:[1,2], h:[2,1], y:[1,1] };
-const TOTAL_CELLS = 20;
-const MAX_CELLS = 18; // 2 cell harus kosong
-const AI_CONFIG_KEY = 'slide_master_ai_config';
+const $=id=>document.getElementById(id);
+const DIM={r:[2,2],v:[1,2],h:[2,1],y:[1,1]},TOTAL=20,MAX=18,AIK='slide_master_ai_config',LK='slide_master_levels';
+const COL={r:'var(--r)',v:'var(--v)',h:'var(--h)',y:'var(--y)'},NAME={r:'Merah 2x2',v:'Biru 1x2',h:'Hijau 2x1',y:'Kuning 1x1'};
+let tool='r',pcs=[],lv=[],edit=-1,hist=[],redo=[],play=null,anim=null,timedOut=false,tt;
+let ai={provider:'openai',model:'gpt-4o-mini',apiKey:'',baseURL:''};
 
-// === STATE ===
-let currentTool = 'r';
-let placedPieces = [];
-let savedLevels = [];
-let editIndex = -1;
-let history = [];
-let redoStack = [];
-
-let aiConfig = { provider: 'openai', model: 'gpt-4o-mini', apiKey: '', baseURL: '' };
+const open=id=>$(id).classList.add('open'),shut=id=>$(id).classList.remove('open');
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>shut(b.dataset.close));
+const store=()=>{try{localStorage.setItem(LK,JSON.stringify(lv))}catch(_){}};
+const cells=a=>a.reduce((s,p)=>{const d=DIM[Array.isArray(p)?p[0]:p.t];return s+d[0]*d[1]},0);
+const arr=()=>pcs.map(p=>[p.t,p.x,p.y]);
+function toast(m,t){t=t||'info';const e=$('toast');e.textContent=m;e.className='show '+t;clearTimeout(tt);tt=setTimeout(()=>e.className='',2800)}
+function ask(msg){return new Promise(r=>{$('dlgMsg').textContent=msg;open('dlg');$('dlgOk').onclick=()=>{shut('dlg');r(true)};$('dlgNo').onclick=()=>{shut('dlg');r(false)}})}
+function setSt(id,cls,txt){const e=$(id);e.className='st '+cls;e.textContent=txt}
+function lock(on){document.body.classList.toggle('lock',on)}
 
 // === AI CONFIG ===
-function loadAIConfig() {
-  try {
-    const c = JSON.parse(localStorage.getItem(AI_CONFIG_KEY) || '{}');
-    aiConfig = Object.assign({ provider: 'openai', model: 'gpt-4o-mini', apiKey: '', baseURL: '' }, c);
-  } catch(_) {}
-}
-function saveAIConfigStore() {
-  try { localStorage.setItem(AI_CONFIG_KEY, JSON.stringify(aiConfig)); } catch(_) {}
-}
-function readAIForm() {
-  return {
-    provider: document.getElementById('aiProvider').value,
-    model: document.getElementById('aiModel').value.trim(),
-    apiKey: document.getElementById('aiApiKey').value.trim(),
-    baseURL: document.getElementById('aiBaseUrl').value.trim()
-  };
-}
+function loadAI(){try{ai=Object.assign(ai,JSON.parse(localStorage.getItem(AIK)||'{}'))}catch(_){}}
+function saveAI(){try{localStorage.setItem(AIK,JSON.stringify(ai))}catch(_){}}
+function readAI(){return{provider:$('aiProvider').value,model:$('aiModel').value.trim(),apiKey:$('aiApiKey').value.trim(),baseURL:$('aiBaseUrl').value.trim()}}
 
-// === UTIL ===
-function cellsOf(pieces) {
-  return pieces.reduce((sum, p) => {
-    const d = Array.isArray(p) ? DIM[p[0]] : DIM[p.t];
-    return sum + d[0] * d[1];
-  }, 0);
-}
-
-// === VALIDASI PUZZLE ===
-function validatePuzzle(pieces, strict18) {
-  if (!Array.isArray(pieces) || pieces.length === 0) return { ok: false, err: 'Puzzle kosong' };
-  
-  let totalCells = 0, redCount = 0, redPos = null;
-  const grid = Array(20).fill(-1);
-  
-  for (let i = 0; i < pieces.length; i++) {
-    const p = pieces[i];
-    if (!Array.isArray(p) || p.length !== 3) return { ok: false, err: 'Format piece #' + (i+1) + ' salah' };
-    const t = p[0];
-    if (!DIM[t]) return { ok: false, err: 'Tipe tidak dikenal: ' + t };
-    const [w, h] = DIM[t];
-    const x = p[1], y = p[2];
-    if (typeof x !== 'number' || typeof y !== 'number') return { ok: false, err: 'Koordinat bukan angka' };
-    if (x < 0 || y < 0 || x + w > 4 || y + h > 5) return { ok: false, err: 'Keluar batas: ' + t + ' (' + x + ',' + y + ')' };
-    for (let dx = 0; dx < w; dx++) for (let dy = 0; dy < h; dy++) {
-      const idx = (y + dy) * 4 + (x + dx);
-      if (grid[idx] !== -1) return { ok: false, err: 'Overlap di (' + (x+dx) + ',' + (y+dy) + ')' };
-      grid[idx] = i;
-    }
-    totalCells += w * h;
-    if (t === 'r') { redCount++; redPos = [x, y]; }
+// === VALIDASI ===
+function validatePuzzle(p,strict){
+  if(!Array.isArray(p)||!p.length)return{ok:false,err:'Puzzle kosong'};
+  let tot=0,rc=0,rp=null;const g=Array(20).fill(-1);
+  for(let i=0;i<p.length;i++){
+    const q=p[i];if(!Array.isArray(q)||q.length!==3)return{ok:false,err:'Format piece #'+(i+1)+' salah'};
+    const t=q[0];if(!DIM[t])return{ok:false,err:'Tipe tidak dikenal: '+t};
+    const[w,h]=DIM[t],x=q[1],y=q[2];
+    if(typeof x!=='number'||typeof y!=='number')return{ok:false,err:'Koordinat bukan angka'};
+    if(x<0||y<0||x+w>4||y+h>5)return{ok:false,err:'Keluar batas: '+t+' ('+x+','+y+')'};
+    for(let a=0;a<w;a++)for(let b=0;b<h;b++){const k=(y+b)*4+x+a;if(g[k]!==-1)return{ok:false,err:'Overlap di ('+(x+a)+','+(y+b)+')'};g[k]=i}
+    tot+=w*h;if(t==='r'){rc++;rp=[x,y]}
   }
-  
-  if (redCount !== 1) return { ok: false, err: 'Harus tepat 1 merah (ada ' + redCount + ')' };
-  if (strict18) {
-    if (totalCells !== MAX_CELLS) return { ok: false, err: 'Harus tepat ' + MAX_CELLS + ' cell (ada ' + totalCells + ')' };
-  } else {
-    if (totalCells > MAX_CELLS) return { ok: false, err: 'Melebihi ' + MAX_CELLS + ' cell (' + totalCells + ')' };
-  }
-  if (redPos[0] === 1 && redPos[1] === 3) return { ok: false, err: 'Merah sudah di target' };
-  return { ok: true, totalCells };
+  if(rc!==1)return{ok:false,err:'Harus tepat 1 merah (ada '+rc+')'};
+  if(strict){if(tot!==MAX)return{ok:false,err:'Harus tepat '+MAX+' cell (ada '+tot+')'}}
+  else if(tot>MAX)return{ok:false,err:'Melebihi '+MAX+' cell ('+tot+')'};
+  if(rp[0]===1&&rp[1]===3)return{ok:false,err:'Merah sudah di target'};
+  return{ok:true,totalCells:tot};
 }
 
 // === BFS SOLVER ===
-let solvePuzzleTimedOut = false;
-function solvePuzzle(pieces, maxIter, maxMs) {
-  solvePuzzleTimedOut = false;
-  maxIter = maxIter || 3000000;
-  maxMs = maxMs || 10000;
-  const _solveT0 = performance.now();
-  const key = s => {
-    const g = Array(20).fill('.');
-    s.forEach(([t,x,y]) => {
-      const [w,h] = DIM[t];
-      for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) g[(y+j)*4 + x+i] = t;
-    });
-    return g.join('');
-  };
-  const seen = new Set([key(pieces)]);
-  const q = [{ s: pieces, p: -1, m: null }];
-  const dirs = [[0,-1], [0,1], [-1,0], [1,0]];
-  
-  for (let h = 0; h < q.length && h < maxIter; h++) {
-    if ((h & 1023) === 0 && performance.now() - _solveT0 > maxMs) {
-      solvePuzzleTimedOut = true;
-      return null;
-    }
-    const s = q[h].s;
-    const ri = s.findIndex(p => p[0] === 'r');
-    if (ri >= 0 && s[ri][1] === 1 && s[ri][2] === 3) {
-      const mv = [];
-      for (let i = h; q[i].p >= 0; i = q[i].p) mv.push(q[i].m);
-      return mv.reverse();
-    }
-    const o = Array(20).fill(-1);
-    s.forEach(([t,x,y], id) => {
-      const [w,hh] = DIM[t];
-      for (let i = 0; i < w; i++) for (let j = 0; j < hh; j++) o[(y+j)*4 + x+i] = id;
-    });
-    s.forEach(([t,x,y], id) => {
-      const [w,hh] = DIM[t];
-      dirs.forEach(([dx,dy]) => {
-        const nx = x + dx, ny = y + dy;
-        if (nx < 0 || ny < 0 || nx+w > 4 || ny+hh > 5) return;
-        for (let i = 0; i < w; i++) for (let j = 0; j < hh; j++) {
-          const v = o[(ny+j)*4 + nx+i];
-          if (v !== -1 && v !== id) return;
-        }
-        const ns = s.slice();
-        ns[id] = [t, nx, ny];
-        const k = key(ns);
-        if (!seen.has(k)) {
-          seen.add(k);
-          q.push({ s: ns, p: h, m: [id, dx, dy] });
-        }
-      });
-    });
+function solvePuzzle(pieces,maxIter,maxMs){
+  timedOut=false;maxIter=maxIter||3e6;maxMs=maxMs||1e4;const t0=performance.now();
+  const key=s=>{const g=Array(20).fill('.');s.forEach(([t,x,y])=>{const[w,h]=DIM[t];for(let i=0;i<w;i++)for(let j=0;j<h;j++)g[(y+j)*4+x+i]=t});return g.join('')};
+  const seen=new Set([key(pieces)]),q=[{s:pieces,p:-1,m:null}],dirs=[[0,-1],[0,1],[-1,0],[1,0]];
+  for(let h=0;h<q.length&&h<maxIter;h++){
+    if((h&1023)===0&&performance.now()-t0>maxMs){timedOut=true;return null}
+    const s=q[h].s,ri=s.findIndex(p=>p[0]==='r');
+    if(ri>=0&&s[ri][1]===1&&s[ri][2]===3){const mv=[];for(let i=h;q[i].p>=0;i=q[i].p)mv.push(q[i].m);return mv.reverse()}
+    const o=Array(20).fill(-1);
+    s.forEach(([t,x,y],id)=>{const[w,hh]=DIM[t];for(let i=0;i<w;i++)for(let j=0;j<hh;j++)o[(y+j)*4+x+i]=id});
+    s.forEach(([t,x,y],id)=>{const[w,hh]=DIM[t];
+      dirs.forEach(([dx,dy])=>{const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx+w>4||ny+hh>5)return;
+        for(let i=0;i<w;i++)for(let j=0;j<hh;j++){const v=o[(ny+j)*4+nx+i];if(v!==-1&&v!==id)return}
+        const ns=s.slice();ns[id]=[t,nx,ny];const k=key(ns);
+        if(!seen.has(k)){seen.add(k);q.push({s:ns,p:h,m:[id,dx,dy]})}});});
   }
   return null;
 }
 
 // === INIT ===
-async function init() {
-  loadAIConfig();
-
-  const stored = localStorage.getItem('slide_master_levels');
-  if (stored) {
-    try { savedLevels = JSON.parse(stored); } catch(e) {}
-  }
-  if (savedLevels.length === 0) {
-    try {
-      const res = await fetch('level.json', { cache: 'no-cache' });
-      if (res.ok) {
-        savedLevels = await res.json();
-        localStorage.setItem('slide_master_levels', JSON.stringify(savedLevels));
-        console.log('Loaded ' + savedLevels.length + ' level dari level.json');
-      }
-    } catch(e) {
-      console.warn('Gagal load level.json', e);
-    }
-  }
-
-  const gridEl = document.getElementById('grid');
-  gridEl.innerHTML = '';
-  for (let y = 0; y < 5; y++) {
-    for (let x = 0; x < 4; x++) {
-      const cell = document.createElement('div');
-      cell.className = 'cell';
-      cell.dataset.x = x;
-      cell.dataset.y = y;
-      cell.addEventListener('pointerdown', handlePlace);
-      gridEl.appendChild(cell);
-    }
-  }
-
-  document.querySelectorAll('.tool-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentTool = btn.dataset.type;
-    });
-  });
-
+async function init(){
+  loadAI();
+  try{const s=localStorage.getItem(LK);if(s)lv=JSON.parse(s)}catch(_){}
+  if(!lv.length){try{const r=await fetch('level.json',{cache:'no-cache'});if(r.ok){lv=await r.json();store()}}catch(e){console.warn('Gagal load level.json',e)}}
+  const g=$('grid');
+  for(let y=0;y<5;y++)for(let x=0;x<4;x++){const c=document.createElement('div');c.className='cell';c.dataset.x=x;c.dataset.y=y;c.addEventListener('pointerdown',place);g.appendChild(c)}
+  document.querySelectorAll('.tool').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tool').forEach(o=>o.classList.remove('active'));b.classList.add('active');tool=b.dataset.type});
   updateUI();
 }
 
 // === PLACE ===
-function handlePlace(e) {
-  const x = parseInt(e.target.dataset.x);
-  const y = parseInt(e.target.dataset.y);
-  if (isNaN(x) || isNaN(y)) return;
-
-  if (currentTool === 'x') {
-    const idx = placedPieces.findIndex(p => x >= p.x && x < p.x + DIM[p.t][0] && y >= p.y && y < p.y + DIM[p.t][1]);
-    if (idx !== -1) {
-      saveHistory();
-      placedPieces.splice(idx, 1);
-      renderBoard();
-    }
-    return;
-  }
-
-  const w = DIM[currentTool][0], h = DIM[currentTool][1];
-  if (x + w > 4 || y + h > 5) { showToast("Kotak keluar batas!", "error"); return; }
-
-  const isOverlap = placedPieces.some(p => {
-    const pw = DIM[p.t][0], ph = DIM[p.t][1];
-    return (x < p.x + pw && x + w > p.x && y < p.y + ph && y + h > p.y);
-  });
-  if (isOverlap) { showToast("Bentrok dengan kotak lain!", "error"); return; }
-
-  // Cek limit cell
-  const addCells = w * h;
-  const newTotal = cellsOf(placedPieces) + addCells;
-  if (newTotal > MAX_CELLS) {
-    showToast("Melebihi " + MAX_CELLS + " cell! Sisakan 2 cell kosong.", "error");
-    return;
-  }
-
-  saveHistory();
-  placedPieces.push({ t: currentTool, x, y });
-  renderBoard();
+function place(e){
+  const x=+e.target.dataset.x,y=+e.target.dataset.y;if(isNaN(x)||isNaN(y))return;
+  if(tool==='x'){const i=pcs.findIndex(p=>x>=p.x&&x<p.x+DIM[p.t][0]&&y>=p.y&&y<p.y+DIM[p.t][1]);if(i!==-1){saveHist();pcs.splice(i,1);renderBoard()}return}
+  const[w,h]=DIM[tool];
+  if(x+w>4||y+h>5){toast('Kotak keluar batas!','error');return}
+  if(pcs.some(p=>x<p.x+DIM[p.t][0]&&x+w>p.x&&y<p.y+DIM[p.t][1]&&y+h>p.y)){toast('Bentrok dengan kotak lain!','error');return}
+  if(cells(pcs)+w*h>MAX){toast('Melebihi '+MAX+' cell! Sisakan 2 cell kosong.','error');return}
+  saveHist();pcs.push({t:tool,x,y});renderBoard();
 }
-
-// === RENDER ===
-function renderBoard() {
-  document.querySelectorAll('.piece').forEach(el => el.remove());
-  placedPieces.forEach((p, idx) => {
-    const div = document.createElement('div');
-    div.className = 'piece t_' + p.t;
-    div.dataset.idx = idx;
-    const w = DIM[p.t][0], h = DIM[p.t][1];
-    div.style.width = `calc(${w} * var(--cell-w) + ${w - 1} * var(--gap))`;
-    div.style.height = `calc(${h} * var(--cell-h) + ${h - 1} * var(--gap))`;
-    div.style.left = `calc(var(--pad) + ${p.x} * (var(--cell-w) + var(--gap)))`;
-    div.style.top = `calc(var(--pad) + ${p.y} * (var(--cell-h) + var(--gap)))`;
-    if (p.t === 'r') div.textContent = '▲';
-    if (p.t === 'v') div.textContent = '⏺';
-    if (p.t === 'h') div.textContent = '⬛';
-    if (p.t === 'y') div.textContent = '●';
-    document.getElementById('grid').appendChild(div);
+const posL=x=>'calc(var(--pad) + '+x+' * (var(--cell-w) + var(--gap)))',posT=y=>'calc(var(--pad) + '+y+' * (var(--cell-h) + var(--gap)))';
+function renderBoard(){
+  document.querySelectorAll('.piece').forEach(e=>e.remove());
+  pcs.forEach((p,i)=>{
+    const d=document.createElement('div'),[w,h]=DIM[p.t];d.className='piece t_'+p.t;d.dataset.idx=i;
+    d.style.width='calc('+w+' * var(--cell-w) + '+(w-1)+' * var(--gap))';
+    d.style.height='calc('+h+' * var(--cell-h) + '+(h-1)+' * var(--gap))';
+    d.style.left=posL(p.x);d.style.top=posT(p.y);
+    if(play)bindPlay(d,i);
+    $('grid').appendChild(d);
   });
   updateUI();
 }
-
-function updateUI() {
-  const cells = cellsOf(placedPieces);
-  const empty = TOTAL_CELLS - cells;
-  document.getElementById('stats').textContent = `Levels: ${savedLevels.length} | Cells: ${cells}/${MAX_CELLS} | Empty: ${empty}`;
-  document.getElementById('btnUndo').disabled = history.length === 0;
-  document.getElementById('btnRedo').disabled = redoStack.length === 0;
-  document.getElementById('btnSave').textContent = editIndex >= 0 ? '🔄 Update Level' : '💾 Simpan Level';
-  document.getElementById('btnOpenList').textContent = `📋 List (${savedLevels.length})`;
+function updateUI(){
+  const c=cells(pcs);
+  $('sLv').textContent=(edit>=0?edit+1:lv.length+1);$('sCells').textContent=c+'/'+MAX;$('sEmpty').textContent=TOTAL-c;
+  $('sCW').classList.toggle('full',c===MAX);
+  $('btnUndo').disabled=!hist.length;$('btnRedo').disabled=!redo.length;
+  $('saveTxt').textContent=edit>=0?'Update Level':'Simpan Level';
+  $('listTxt').textContent='List ('+lv.length+')';
 }
 
 // === HISTORY ===
-function saveHistory() {
-  history.push(JSON.stringify(placedPieces));
-  redoStack = [];
-}
-document.getElementById('btnUndo').onclick = () => {
-  if (history.length > 0) {
-    redoStack.push(JSON.stringify(placedPieces));
-    placedPieces = JSON.parse(history.pop());
-    renderBoard();
-  }
-};
-document.getElementById('btnRedo').onclick = () => {
-  if (redoStack.length > 0) {
-    history.push(JSON.stringify(placedPieces));
-    placedPieces = JSON.parse(redoStack.pop());
-    renderBoard();
-  }
+function saveHist(){hist.push(JSON.stringify(pcs));redo=[]}
+$('btnUndo').onclick=()=>{if(hist.length){redo.push(JSON.stringify(pcs));pcs=JSON.parse(hist.pop());renderBoard()}};
+$('btnRedo').onclick=()=>{if(redo.length){hist.push(JSON.stringify(pcs));pcs=JSON.parse(redo.pop());renderBoard()}};
+$('btnClear').onclick=async()=>{if(pcs.length&&await ask('Hapus semua kotak di papan?')){saveHist();pcs=[];renderBoard()}};
+
+// === MIRROR (BARU) ===
+$('btnMirror').onclick=()=>{
+  if(!pcs.length){toast('Papan kosong!','error');return}
+  saveHist();pcs.forEach(p=>{p.x=4-DIM[p.t][0]-p.x});renderBoard();toast('Level dibalik horizontal','success');
 };
 
-// === SIMPAN / CLEAR ===
-document.getElementById('btnClear').onclick = () => {
-  if (placedPieces.length > 0 && confirm("Hapus semua kotak di papan?")) {
-    saveHistory();
-    placedPieces = [];
-    renderBoard();
-  }
+// === SIMPAN ===
+$('btnSave').onclick=async()=>{
+  const a=arr(),v=validatePuzzle(a);if(!v.ok){toast(v.err,'error');return}
+  const isEdit = edit >= 0;
+  if(!await ask(isEdit ? 'Simpan perubahan pada Level '+(edit+1)+'?' : 'Simpan level baru ini?')) return;
+  
+  a.sort((m,n)=>m[0]==='r'?-1:n[0]==='r'?1:0);
+  if(isEdit){lv[edit]=a;toast('Level diperbarui!','success')}else{lv.push(a);toast('Level baru disimpan!','success')}
+  store();pcs=[];edit=-1;hist=[];redo=[];renderBoard();renderList();
 };
 
-document.getElementById('btnSave').onclick = () => {
-  const arr = placedPieces.map(p => [p.t, p.x, p.y]);
-  const v = validatePuzzle(arr);
-  if (!v.ok) { showToast(v.err, "error"); return; }
-
-  arr.sort((a, b) => (a[0] === 'r' ? -1 : (b[0] === 'r' ? 1 : 0)));
-  if (editIndex >= 0) {
-    savedLevels[editIndex] = arr;
-    showToast("Level diperbarui!", "success");
-  } else {
-    savedLevels.push(arr);
-    showToast("Level baru disimpan!", "success");
-  }
-
-  localStorage.setItem('slide_master_levels', JSON.stringify(savedLevels));
-  placedPieces = [];
-  editIndex = -1;
-  history = [];
-  renderBoard();
-  renderLevelList();
-};
-
-// === MODAL LIST ===
-const modal = document.getElementById('modalOverlay');
-document.getElementById('btnOpenList').onclick = () => { renderLevelList(); modal.style.display = 'flex'; };
-document.getElementById('btnCloseModal').onclick = () => modal.style.display = 'none';
-document.getElementById('btnCreateNew').onclick = () => {
-  placedPieces = []; editIndex = -1; history = []; renderBoard(); modal.style.display = 'none';
-};
-
-function renderLevelList() {
-  const container = document.getElementById('levelListContainer');
-  container.innerHTML = '';
-  if (savedLevels.length === 0) {
-    container.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Belum ada level tersimpan.</div>';
-    return;
-  }
-  savedLevels.forEach((lvl, idx) => {
-    const div = document.createElement('div');
-    div.className = 'level-item';
-
-    const mini = document.createElement('div');
-    mini.className = 'mini-grid';
-    lvl.forEach(p => {
-      const mp = document.createElement('div');
-      mp.className = 'mini-piece';
-      mp.style.background = `var(--${p[0] === 'r' ? 'red' : p[0] === 'v' ? 'blue' : p[0] === 'h' ? 'grn' : 'yel'})`;
-      mp.style.width = (DIM[p[0]][0] * 25) + '%';
-      mp.style.height = (DIM[p[0]][1] * 20) + '%';
-      mp.style.left = (p[1] * 25) + '%';
-      mp.style.top = (p[2] * 20) + '%';
-      mini.appendChild(mp);
-    });
-
-    const info = document.createElement('div');
-    info.className = 'level-info';
-    info.innerHTML = `<div class="level-title">Level ${idx + 1}</div>`;
-
-    const actions = document.createElement('div');
-    actions.className = 'level-actions';
-
-    const btnEdit = document.createElement('button');
-    btnEdit.className = 'action-btn btn-info';
-    btnEdit.textContent = '✏️ Edit';
-    btnEdit.onclick = () => {
-      placedPieces = lvl.map(p => ({ t: p[0], x: p[1], y: p[2] }));
-      editIndex = idx;
-      history = []; redoStack = [];
-      renderBoard();
-      modal.style.display = 'none';
-    };
-
-    const btnDel = document.createElement('button');
-    btnDel.className = 'action-btn btn-danger';
-    btnDel.textContent = '🗑️';
-    btnDel.onclick = () => {
-      if (confirm(`Hapus Level ${idx + 1}?`)) {
-        savedLevels.splice(idx, 1);
-        localStorage.setItem('slide_master_levels', JSON.stringify(savedLevels));
-        if (editIndex === idx) { placedPieces = []; editIndex = -1; renderBoard(); }
-        renderLevelList();
-        updateUI();
-      }
-    };
-
-    actions.appendChild(btnEdit);
-    actions.appendChild(btnDel);
-    info.appendChild(actions);
-
-    div.appendChild(mini);
-    div.appendChild(info);
-    container.appendChild(div);
+// === LIST ===
+$('btnOpenList').onclick=()=>{renderList();open('modalOverlay')};
+$('btnCreateNew').onclick=()=>{pcs=[];edit=-1;hist=[];redo=[];renderBoard();shut('modalOverlay')};
+function mkBtn(cls,ico,txt,fn){const b=document.createElement('button');b.className=cls;b.innerHTML='<svg class="i" style="width:16px;height:16px"><use href="#'+ico+'"/></svg>'+txt;b.onclick=fn;return b}
+function renderList(){
+  const c=$('levelListContainer');c.innerHTML='';
+  if(!lv.length){c.innerHTML='<div class="st" style="background:none;padding:24px">Belum ada level. Susun blok di papan lalu tekan Simpan Level.</div>';return}
+  lv.forEach((l,idx)=>{
+    const d=document.createElement('div');d.className='lvl';
+    const m=document.createElement('div');m.className='mini';
+    l.forEach(p=>{const i=document.createElement('i'),[w,h]=DIM[p[0]];i.style.cssText='background:'+COL[p[0]]+';width:'+w*25+'%;height:'+h*20+'%;left:'+p[1]*25+'%;top:'+p[2]*20+'%';m.appendChild(i)});
+    const info=document.createElement('div');info.className='li';
+    const t=document.createElement('div');t.className='lt';t.innerHTML='<span>Level '+(idx+1)+'</span>';
+    const badge=document.createElement('span');badge.className='bd';badge.textContent='...';t.appendChild(badge);
+    const act=document.createElement('div');act.className='la';
+    act.appendChild(mkBtn('neu','edit','Edit',()=>{pcs=l.map(p=>({t:p[0],x:p[1],y:p[2]}));edit=idx;hist=[];redo=[];renderBoard();shut('modalOverlay')}));
+    act.appendChild(mkBtn('neu dng','trash','',async()=>{
+      if(!await ask('Hapus Level '+(idx+1)+'?'))return;
+      lv.splice(idx,1);store();
+      if(edit===idx){pcs=[];edit=-1;renderBoard()}else if(edit>idx)edit--;
+      renderList();updateUI();
+    }));
+    info.append(t,act);d.append(m,info);c.appendChild(d);
+    setTimeout(()=>{
+      const a=l.map(p=>[p[0],p[1],p[2]]),v=validatePuzzle(a,false);
+      if(!v.ok){badge.textContent='Invalid';badge.style.color='var(--bad)';return}
+      const mv=solvePuzzle(a,5e5,800);
+      if(mv){badge.textContent=mv.length+' moves';badge.style.color='var(--ok)'}
+      else if(timedOut){badge.textContent='? moves';badge.style.color='var(--warn)'}
+      else{badge.textContent='No Sol';badge.style.color='var(--bad)'}
+    },idx*100);
   });
-}
-
-// === FORMATTER JSON ===
-function formatCleanJSON(levels) {
-  let out = "[\n";
-  levels.forEach((lvl, i) => {
-    out += "  [\n    ";
-    out += lvl.map(p => `["${p[0]}", ${p[1]}, ${p[2]}]`).join(", ");
-    out += "\n  ]";
-    if (i < levels.length - 1) out += ",";
-    out += "\n";
-  });
-  out += "]";
-  return out;
 }
 
 // === IMPORT / EXPORT ===
-document.getElementById('btnExport').onclick = () => {
-  if (savedLevels.length === 0) { showToast("Belum ada level", "error"); return; }
-  const jsonText = formatCleanJSON(savedLevels);
-  const blob = new Blob([jsonText], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = "level.json";
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  navigator.clipboard.writeText(jsonText).then(() => {
-    showToast("File didownload & JSON dicopy!", "success");
-  }).catch(() => {
-    showToast("File berhasil didownload!", "success");
+function formatJSON(L){return'[\n'+L.map(l=>'  [\n    '+l.map(p=>'["'+p[0]+'", '+p[1]+', '+p[2]+']').join(', ')+'\n  ]').join(',\n')+'\n]'}
+$('btnExport').onclick=()=>{
+  if(!lv.length){toast('Belum ada level','error');return}
+  const txt=formatJSON(lv),u=URL.createObjectURL(new Blob([txt],{type:'application/json'})),a=document.createElement('a');
+  a.href=u;a.download='level.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u);
+  (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('File didownload & JSON dicopy!','success')).catch(()=>toast('File berhasil didownload!','success'));
+};
+$('btnImport').onclick=()=>{$('impTxt').value='';open('impModal')};
+$('impGo').onclick=async()=>{
+  const s=$('impTxt').value.trim();if(!s)return;
+  let p;try{p=JSON.parse(s)}catch(_){toast('Gagal membaca JSON!','error');return}
+  if(!Array.isArray(p)||!p.length||!p.every(Array.isArray)){toast('Format JSON tidak valid!','error');return}
+  for(let i=0;i<p.length;i++){const v=validatePuzzle(p[i],false);if(!v.ok){toast('Level '+(i+1)+': '+v.err,'error');return}}
+  if(!await ask('Ganti semua level saat ini dengan data import?'))return;
+  lv=p;edit=-1;store();shut('impModal');renderList();updateUI();toast('Import berhasil!','success');
+};
+
+// === SOLVE ===
+function levelDifficulty(n){
+  let t,a,b;
+  if(n<=10){t='VERY EASY';a=3;b=6}else if(n<=30){t='EASY';a=5;b=10}else if(n<=49){t='MEDIUM';a=8;b=15}
+  else if(n<=100){t='ADVANCED';a=30;b=40}else if(n<=200){t='MASTER';a=50;b=60}else if(n<=300){t='GRANDMASTER';a=70;b=80}
+  else if(n<=500){t='LEGENDARY';a=90;b=100}else{t='MYTHIC';a=90;b=100}
+  return t+' ('+a+'-'+b+' moves)';
+}
+function showMoves(moves,a){
+  const s=a.map(p=>[...p]);let h='';
+  moves.forEach(([id,dx,dy],i)=>{
+    const t=s[id][0],fx=s[id][1],fy=s[id][2];s[id][1]+=dx;s[id][2]+=dy;
+    const ar=dx===1?'→':dx===-1?'←':dy===1?'↓':'↑';
+    h+='<div class="mv-i" style="border-color:'+COL[t]+'"><b style="color:var(--mut);min-width:26px">'+(i+1)+'.</b><div style="flex:1"><div style="font-weight:800;font-size:13px">'+NAME[t]+' <span style="color:'+COL[t]+';font-size:16px">'+ar+'</span></div><div style="font-size:11px;color:var(--mut)">('+fx+','+fy+') → ('+s[id][1]+','+s[id][2]+')</div></div></div>';
   });
+  $('movesList').innerHTML=h;$('movesSummary').textContent=moves.length+' langkah optimal';open('movesModal');
+}
+function runSolve(btnId,onOk){
+  if(!pcs.length){toast('Papan kosong!','error');return}
+  const a=arr(),v=validatePuzzle(a);if(!v.ok){toast('Puzzle invalid: '+v.err,'error');return}
+  toast('Menghitung solusi...','info');const b=$(btnId);b.disabled=true;
+  setTimeout(()=>{
+    const t0=performance.now(),mv=solvePuzzle(a),dt=performance.now()-t0;b.disabled=false;
+    if(!mv)toast(timedOut?'Terlalu kompleks (timeout)':'Tidak ada solusi!','error');
+    else if(!mv.length)toast('Merah sudah di target','success');
+    else onOk(mv,a,dt);
+  },50);
+}
+$('btnSolve').onclick=()=>runSolve('btnSolve',(mv,a,dt)=>toast('Solvable: '+mv.length+' langkah ('+dt.toFixed(0)+'ms)','success'));
+$('btnSolveMoves').onclick=()=>runSolve('btnSolveMoves',(mv,a)=>animate(mv,a));
+
+// === ANIMASI SOLUSI ===
+function stopAnim(){
+  if(!anim)return;clearTimeout(anim.timer);const o=anim.original;anim=null;pcs=o.map(p=>({...p}));
+  $('grid').classList.remove('anim');$('animBar').classList.remove('on');lock(false);renderBoard();
+}
+function updAnim(){
+  if(!anim){$('animBar').classList.remove('on');return}
+  $('animBar').classList.add('on');$('animLabel').textContent=(anim.paused?'Jeda ':'Putar ')+Math.min(anim.idx,anim.moves.length)+'/'+anim.moves.length;
+}
+function nextAnim(){
+  if(!anim||anim.paused)return;
+  if(anim.idx>=anim.moves.length){
+    const ri=pcs.findIndex(p=>p.t==='r'),el=document.querySelector('#grid .piece[data-idx="'+ri+'"]');if(el)el.classList.add('win');
+    $('animLabel').textContent='Selesai · '+anim.moves.length+' langkah';anim.timer=setTimeout(stopAnim,1600);return;
+  }
+  const[i,dx,dy]=anim.moves[anim.idx],p=pcs[i];if(!p){stopAnim();return}
+  p.x+=dx;p.y+=dy;
+  const el=document.querySelector('#grid .piece[data-idx="'+i+'"]');
+  if(el){el.style.left=posL(p.x);el.style.top=posT(p.y);el.classList.add('mv');setTimeout(()=>el.classList.remove('mv'),300)}
+  anim.idx++;updAnim();anim.timer=setTimeout(nextAnim,400);
+}
+function animate(moves){
+  if(anim)stopAnim();if(play)exitPlay();
+  const original=pcs.map(p=>({...p}));renderBoard();
+  anim={moves,original,idx:0,paused:false,timer:null};
+  $('grid').classList.add('anim');lock(true);$('animPause').lastChild.textContent='Pause';updAnim();anim.timer=setTimeout(nextAnim,400);
+}
+$('animPause').onclick=()=>{
+  if(!anim||anim.idx>=anim.moves.length)return;anim.paused=!anim.paused;
+  $('animPause').lastChild.textContent=anim.paused?'Resume':'Pause';
+  if(anim.paused)clearTimeout(anim.timer);else nextAnim();updAnim();
 };
+$('animStop').onclick=stopAnim;
 
-document.getElementById('btnImport').onclick = () => {
-  const input = prompt("Paste kode JSON di sini:");
-  if (!input) return;
-  try {
-    const parsed = JSON.parse(input);
-    if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
-      if (confirm("Ganti semua level saat ini dengan data import?")) {
-        savedLevels = parsed;
-        localStorage.setItem('slide_master_levels', JSON.stringify(savedLevels));
-        renderLevelList();
-        updateUI();
-        showToast("Import berhasil!", "success");
-      }
-    } else {
-      showToast("Format JSON tidak valid!", "error");
-    }
-  } catch(e) {
-    showToast("Gagal membaca JSON!", "error");
-  }
+// === PLAY-TEST (BARU) ===
+function canMove(i,dx,dy){
+  const p=pcs[i],[w,h]=DIM[p.t],nx=p.x+dx,ny=p.y+dy;
+  if(nx<0||ny<0||nx+w>4||ny+h>5)return false;
+  return !pcs.some((q,j)=>j!==i&&nx<q.x+DIM[q.t][0]&&nx+w>q.x&&ny<q.y+DIM[q.t][1]&&ny+h>q.y);
+}
+function bindPlay(el,i){
+  el.onpointerdown=e=>{
+    e.preventDefault();el.setPointerCapture(e.pointerId);let sx=e.clientX,sy=e.clientY;const th=$('grid').clientWidth/4*.45;
+    el.onpointermove=m=>{
+      const dx=m.clientX-sx,dy=m.clientY-sy;if(Math.max(Math.abs(dx),Math.abs(dy))<th)return;
+      const hz=Math.abs(dx)>Math.abs(dy),mx=hz?Math.sign(dx):0,my=hz?0:Math.sign(dy);sx=m.clientX;sy=m.clientY;
+      if(!play||!canMove(i,mx,my))return;
+      pcs[i].x+=mx;pcs[i].y+=my;el.style.left=posL(pcs[i].x);el.style.top=posT(pcs[i].y);
+      play.n++;$('playLabel').textContent='Langkah '+play.n;if(navigator.vibrate)navigator.vibrate(8);
+      const r=pcs.find(p=>p.t==='r');
+      if(r.x===1&&r.y===3){el.classList.add('win');$('playLabel').textContent='Menang · '+play.n+' langkah';toast('Level selesai!','success');el.onpointermove=null;play.won=true}
+    };
+    el.onpointerup=()=>{el.onpointermove=null};
+  };
+}
+function startPlay(){
+  if(anim)return;if(!pcs.length){toast('Papan kosong!','error');return}
+  const v=validatePuzzle(arr());if(!v.ok){toast('Puzzle invalid: '+v.err,'error');return}
+  play={orig:pcs.map(p=>({...p})),n:0,won:false};
+  $('grid').classList.add('play');lock(true);$('playBar').classList.add('on');$('playLabel').textContent='Langkah 0';renderBoard();
+  toast('Geser blok untuk memainkan level','info');
+}
+function resetPlay(){if(!play)return;pcs=play.orig.map(p=>({...p}));play.n=0;play.won=false;$('playLabel').textContent='Langkah 0';renderBoard()}
+function exitPlay(){
+  if(!play)return;pcs=play.orig.map(p=>({...p}));play=null;
+  $('grid').classList.remove('play');$('playBar').classList.remove('on');lock(false);renderBoard();
+}
+$('btnPlay').onclick=startPlay;$('playReset').onclick=resetPlay;$('playExit').onclick=exitPlay;
+
+// === AI ===
+$('btnAI').onclick=()=>{
+  $('aiProvider').value=ai.provider||'openai';$('aiModel').value=ai.model||'';$('aiApiKey').value=ai.apiKey||'';$('aiBaseUrl').value=ai.baseURL||'';
+  $('aiBaseUrlWrap').style.display=ai.provider==='custom'?'flex':'none';
+  setSt('aiStatus','','Belum dites');setSt('aiGenStatus','','Generate puzzle dengan AI sesuai tingkat kesulitan level');$('aiGenStatus').style.background='none';open('aiModal');
 };
-
-// === SOLVE BUTTON ===
-// === SOLVE MOVES HELPERS ===
-function levelDifficulty(levelNum) {
-  let tier, minM, maxM;
-  if (levelNum <= 10)       { tier = 'VERY EASY';   minM = 3;  maxM = 6;  }
-  else if (levelNum <= 30)  { tier = 'EASY';        minM = 5;  maxM = 10; }
-  else if (levelNum <= 49)  { tier = 'MEDIUM';      minM = 8;  maxM = 15; }
-  else if (levelNum <= 100) { tier = 'ADVANCED';    minM = 30; maxM = 40; }
-  else if (levelNum <= 200) { tier = 'MASTER';      minM = 50; maxM = 60; }
-  else if (levelNum <= 300) { tier = 'GRANDMASTER'; minM = 70; maxM = 80; }
-  else if (levelNum <= 500) { tier = 'LEGENDARY';   minM = 90; maxM = 100; }
-  else                      { tier = 'MYTHIC';      minM = 90; maxM = 100; }
-  return tier + ' (' + minM + '-' + maxM + ' moves)';
-}
-
-function showSolveMoves(moves, arr) {
-  const state = arr.map(p => [...p]);
-  let html = '';
-  moves.forEach(([id, dx, dy], i) => {
-    const t = state[id][0];
-    const fromX = state[id][1], fromY = state[id][2];
-    state[id][1] += dx;
-    state[id][2] += dy;
-    const toX = state[id][1], toY = state[id][2];
-    const color = t === 'r' ? 'var(--red)' : t === 'v' ? 'var(--blue)' : t === 'h' ? 'var(--grn)' : 'var(--yel)';
-    const name = t === 'r' ? 'Merah 2x2' : t === 'v' ? 'Biru 1x2' : t === 'h' ? 'Hijau 2x1' : 'Kuning 1x1';
-    const arrow = dx === 1 ? '→' : dx === -1 ? '←' : dy === 1 ? '↓' : '↑';
-    html += `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface-light);border-radius:8px;margin-bottom:6px;border-left:4px solid ${color};">
-      <div style="font-weight:800;color:var(--text-muted);min-width:24px;font-size:14px;">${i+1}.</div>
-      <div style="flex:1;">
-        <div style="font-weight:700;font-size:13px;">${name} <span style="color:${color};font-size:16px;">${arrow}</span></div>
-        <div style="font-size:11px;color:var(--text-muted);">(${fromX},${fromY}) → (${toX},${toY})</div>
-      </div>
-    </div>`;
-  });
-  document.getElementById('movesList').innerHTML = html;
-  document.getElementById('movesSummary').textContent = moves.length + ' langkah optimal';
-  document.getElementById('movesModal').style.display = 'flex';
-}
-
-document.getElementById('btnSolve').onclick = () => {
-  if (placedPieces.length === 0) { showToast("Papan kosong!", "error"); return; }
-  const arr = placedPieces.map(p => [p.t, p.x, p.y]);
-  const v = validatePuzzle(arr);
-  if (!v.ok) { showToast("Puzzle invalid: " + v.err, "error"); return; }
-
-  showToast("⏳ Menghitung solusi...", "info");
-  const btn = document.getElementById('btnSolve');
-  btn.disabled = true;
-  setTimeout(() => {
-    const t0 = performance.now();
-    const moves = solvePuzzle(arr);
-    const dt = performance.now() - t0;
-    btn.disabled = false;
-    if (!moves) {
-      if (solvePuzzleTimedOut) showToast("⏱ Terlalu kompleks (timeout)", "error");
-      else showToast("❌ Tidak ada solusi!", "error");
-    } else if (moves.length === 0) {
-      showToast("✓ Merah sudah di target", "success");
-    } else {
-      showToast(`✅ Solvable: ${moves.length} langkah (${dt.toFixed(0)}ms)`, "success");
-    }
-  }, 50);
+$('aiProvider').onchange=e=>{
+  const p=e.target.value,d={openai:'gpt-4o-mini',gemini:'gemini-2.0-flash',groq:'llama-3.3-70b-versatile',openrouter:'openai/gpt-4o-mini',custom:''},cur=$('aiModel').value;
+  if(!cur||Object.values(d).filter(Boolean).includes(cur))$('aiModel').value=d[p]||'';
+  $('aiBaseUrlWrap').style.display=p==='custom'?'flex':'none';
 };
-
-document.getElementById('btnSolveMoves').onclick = () => {
-  if (placedPieces.length === 0) { showToast("Papan kosong!", "error"); return; }
-  const arr = placedPieces.map(p => [p.t, p.x, p.y]);
-  const v = validatePuzzle(arr);
-  if (!v.ok) { showToast("Puzzle invalid: " + v.err, "error"); return; }
-  showToast("⏳ Menghitung solusi...", "info");
-  const btn = document.getElementById('btnSolveMoves');
-  btn.disabled = true;
-  setTimeout(() => {
-    const moves = solvePuzzle(arr);
-    btn.disabled = false;
-    if (!moves) {
-      if (solvePuzzleTimedOut) showToast("⏱ Terlalu kompleks (timeout)", "error");
-      else showToast("❌ Tidak ada solusi!", "error");
-    } else if (moves.length === 0) {
-      showToast("✓ Merah sudah di target", "success");
-    } else {
-      animateSolveMoves(moves, arr);
-    }
-  }, 50);
+$('btnAISave').onclick=()=>{ai=readAI();saveAI();toast('Konfigurasi AI disimpan','success')};
+function aiURL(p,b){return p==='openai'?'https://api.openai.com/v1/chat/completions':p==='groq'?'https://api.groq.com/openai/v1/chat/completions':p==='openrouter'?'https://openrouter.ai/api/v1/chat/completions':p==='custom'?b:''}
+function geminiURL(c){return'https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(c.model)+':generateContent?key='+encodeURIComponent(c.apiKey)}
+function oaHeaders(c){const h={'Content-Type':'application/json',Authorization:'Bearer '+c.apiKey};if(c.provider==='openrouter'){h['HTTP-Referer']=location.origin;h['X-Title']='Slide Master Editor'}return h}
+async function chk(res){if(!res.ok){const e=await res.text();throw new Error('HTTP '+res.status+' — '+e.substring(0,100))}return res.json()}
+async function aiTest(c){
+  if(!c.apiKey)throw new Error('API key kosong');if(!c.model)throw new Error('Model kosong');
+  if(c.provider==='gemini')return chk(await fetch(geminiURL(c),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:'Say OK'}]}],generationConfig:{maxOutputTokens:10}})}));
+  const u=aiURL(c.provider,c.baseURL);if(!u)throw new Error('Base URL kosong');
+  return chk(await fetch(u,{method:'POST',headers:oaHeaders(c),body:JSON.stringify({model:c.model,messages:[{role:'user',content:'Say OK'}],max_tokens:10})}));
+}
+$('btnAITest').onclick=async()=>{
+  const b=$('btnAITest'),c=readAI();
+  if(!c.apiKey){setSt('aiStatus','err','API Key kosong');return}
+  b.disabled=true;setSt('aiStatus','wait','Menguji koneksi...');
+  try{await aiTest(c);setSt('aiStatus','ok','Koneksi OK — '+c.provider+' / '+c.model)}
+  catch(e){setSt('aiStatus','err','Gagal: '+(e.message||'Error').substring(0,100))}
+  finally{b.disabled=false}
 };
-
-let animState = null;
-
-function stopAnim() {
-  if (!animState) return;
-  clearTimeout(animState.timer);
-  const original = animState.original;
-  animState = null;
-  placedPieces = original.map(p => ({ ...p }));
-  document.getElementById('grid').classList.remove('anim-mode');
-  document.getElementById('animBar').classList.remove('active');
-  document.querySelectorAll('.cell').forEach(c => c.style.pointerEvents = '');
-  document.querySelectorAll('.tool-btn').forEach(b => b.style.pointerEvents = '');
-  ['btnSolve','btnSolveMoves','btnSave','btnClear','btnUndo','btnRedo','btnImport','btnExport','btnAI'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.disabled = false;
-  });
-  renderBoard();
-}
-
-function updateAnimBar() {
-  if (!animState) {
-    document.getElementById('animBar').classList.remove('active');
-    return;
-  }
-  document.getElementById('animBar').classList.add('active');
-  const icon = animState.paused ? '⏸' : '▶';
-  const total = animState.moves.length;
-  const current = Math.min(animState.idx, total);
-  document.getElementById('animLabel').textContent = icon + ' ' + current + '/' + total;
-}
-
-function playNextAnimMove() {
-  if (!animState || animState.paused) return;
-
-  if (animState.idx >= animState.moves.length) {
-    const redIdx = placedPieces.findIndex(p => p.t === 'r');
-    if (redIdx >= 0) {
-      const redEl = document.querySelector('#grid .piece[data-idx="' + redIdx + '"]');
-      if (redEl) redEl.classList.add('anim-win');
-    }
-    document.getElementById('animLabel').textContent = '✅ Selesai — ' + animState.moves.length + ' langkah';
-    animState.timer = setTimeout(() => stopAnim(), 1600);
-    return;
-  }
-
-  const [pieceIdx, dx, dy] = animState.moves[animState.idx];
-  const piece = placedPieces[pieceIdx];
-  if (!piece) { stopAnim(); return; }
-
-  piece.x += dx;
-  piece.y += dy;
-
-  const el = document.querySelector('#grid .piece[data-idx="' + pieceIdx + '"]');
-  if (el) {
-    el.style.left = 'calc(var(--pad) + ' + piece.x + ' * (var(--cell-w) + var(--gap)))';
-    el.style.top = 'calc(var(--pad) + ' + piece.y + ' * (var(--cell-h) + var(--gap)))';
-    el.classList.add('anim-moving');
-    setTimeout(() => { if (el) el.classList.remove('anim-moving'); }, 300);
-  }
-
-  animState.idx++;
-  updateAnimBar();
-  animState.timer = setTimeout(playNextAnimMove, 400);
-}
-
-function animateSolveMoves(moves, arr) {
-  if (animState) stopAnim();
-
-  const original = placedPieces.map(p => ({ ...p }));
-  renderBoard();
-
-  animState = { moves: moves, original: original, idx: 0, paused: false, timer: null };
-
-  document.getElementById('grid').classList.add('anim-mode');
-  document.getElementById('animPause').textContent = '⏸ Pause';
-
-  document.querySelectorAll('.cell').forEach(c => c.style.pointerEvents = 'none');
-  document.querySelectorAll('.tool-btn').forEach(b => b.style.pointerEvents = 'none');
-  ['btnSolve','btnSolveMoves','btnSave','btnClear','btnUndo','btnRedo','btnImport','btnExport','btnAI'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.disabled = true;
-  });
-
-  updateAnimBar();
-  animState.timer = setTimeout(playNextAnimMove, 400);
-}
-
-function togglePauseAnim() {
-  if (!animState) return;
-  if (animState.idx >= animState.moves.length) return;
-  animState.paused = !animState.paused;
-  const btn = document.getElementById('animPause');
-  if (animState.paused) {
-    btn.textContent = '▶ Resume';
-    clearTimeout(animState.timer);
-  } else {
-    btn.textContent = '⏸ Pause';
-    playNextAnimMove();
-  }
-  updateAnimBar();
-}
-
-document.getElementById('animPause').onclick = togglePauseAnim;
-document.getElementById('animStop').onclick = stopAnim;
-
-document.getElementById('btnCloseMovesModal').onclick = () => document.getElementById('movesModal').style.display = 'none';
-document.getElementById('btnCloseMovesBottom').onclick = () => document.getElementById('movesModal').style.display = 'none';
-
-// === AI MODAL ===
-const aiModal = document.getElementById('aiModal');
-document.getElementById('btnCloseAIModal').onclick = () => aiModal.style.display = 'none';
-
-document.getElementById('btnAI').onclick = () => {
-  document.getElementById('aiProvider').value = aiConfig.provider || 'openai';
-  document.getElementById('aiModel').value = aiConfig.model || '';
-  document.getElementById('aiApiKey').value = aiConfig.apiKey || '';
-  document.getElementById('aiBaseUrl').value = aiConfig.baseURL || '';
-  document.getElementById('aiBaseUrlWrap').style.display = aiConfig.provider === 'custom' ? 'flex' : 'none';
-  document.getElementById('aiStatus').textContent = '⚪ Belum dites';
-  document.getElementById('aiStatus').style.background = 'var(--surface-light)';
-  document.getElementById('aiStatus').style.color = 'var(--text-muted)';
-  document.getElementById('aiGenStatus').textContent = 'Klik untuk generate puzzle dengan AI';
-  aiModal.style.display = 'flex';
-};
-
-document.getElementById('aiProvider').onchange = (e) => {
-  const p = e.target.value;
-  const defaults = { openai: 'gpt-4o-mini', gemini: 'gemini-2.0-flash', groq: 'llama-3.3-70b-versatile', openrouter: 'openai/gpt-4o-mini', custom: '' };
-  const allDefaults = Object.values(defaults).filter(Boolean);
-  const cur = document.getElementById('aiModel').value;
-  if (!cur || allDefaults.includes(cur)) document.getElementById('aiModel').value = defaults[p] || '';
-  document.getElementById('aiBaseUrlWrap').style.display = p === 'custom' ? 'flex' : 'none';
-};
-
-document.getElementById('btnAISave').onclick = () => {
-  aiConfig = readAIForm();
-  saveAIConfigStore();
-  showToast("✅ Konfigurasi AI disimpan", "success");
-};
-
-// === AI API HELPERS ===
-function openAIURLFor(provider, baseURL) {
-  if (provider === 'openai') return 'https://api.openai.com/v1/chat/completions';
-  if (provider === 'groq') return 'https://api.groq.com/openai/v1/chat/completions';
-  if (provider === 'openrouter') return 'https://openrouter.ai/api/v1/chat/completions';
-  if (provider === 'custom') return baseURL;
-  return '';
-}
-
-async function aiTest(cfg) {
-  if (!cfg.apiKey) throw new Error('API key kosong');
-  if (!cfg.model) throw new Error('Model kosong');
-  
-  if (cfg.provider === 'gemini') {
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(cfg.model) + ':generateContent?key=' + encodeURIComponent(cfg.apiKey);
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: 'Say OK' }] }],
-        generationConfig: { maxOutputTokens: 10 }
-      })
-    });
-    if (!res.ok) {
-      const e = await res.text();
-      throw new Error('HTTP ' + res.status + ' — ' + e.substring(0, 80));
-    }
-    return await res.json();
-  }
-  
-  const url = openAIURLFor(cfg.provider, cfg.baseURL);
-  if (!url) throw new Error('Base URL kosong');
-  const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.apiKey };
-  if (cfg.provider === 'openrouter') {
-    headers['HTTP-Referer'] = location.origin;
-    headers['X-Title'] = 'Slide Master Editor';
-  }
-  const res = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      model: cfg.model,
-      messages: [{ role: 'user', content: 'Say OK' }],
-      max_tokens: 10
-    })
-  });
-  if (!res.ok) {
-    const e = await res.text();
-    throw new Error('HTTP ' + res.status + ' — ' + e.substring(0, 80));
-  }
-  return await res.json();
-}
-
-document.getElementById('btnAITest').onclick = async () => {
-  const btn = document.getElementById('btnAITest');
-  const status = document.getElementById('aiStatus');
-  const cfg = readAIForm();
-  if (!cfg.apiKey) {
-    status.textContent = '⚠️ API Key kosong';
-    status.style.background = '#4a2020';
-    status.style.color = '#ff8a8e';
-    return;
-  }
-  btn.disabled = true;
-  status.textContent = '🟡 Menguji koneksi...';
-  status.style.background = '#2a3a4a';
-  status.style.color = '#00B4FF';
-  try {
-    await aiTest(cfg);
-    status.textContent = '🟢 Koneksi OK — ' + cfg.provider + ' / ' + cfg.model;
-    status.style.background = '#1a3a1a';
-    status.style.color = '#5cffa6';
-  } catch(e) {
-    status.textContent = '🔴 Gagal: ' + (e.message || 'Error').substring(0, 100);
-    status.style.background = '#4a1a1a';
-    status.style.color = '#ff6a70';
-  } finally {
-    btn.disabled = false;
-  }
-};
-
-// === AI PUZZLE GENERATION ===
-const PUZZLE_SYSTEM_PROMPT = `You are a puzzle generator for "Slide Master", a sliding block puzzle on a 4x5 grid.
+const PROMPT=`You are a puzzle generator for "Slide Master", a sliding block puzzle on a 4x5 grid.
 
 GRID: 4 columns (x: 0-3), 5 rows (y: 0-4). Total 20 cells.
 
@@ -985,165 +516,76 @@ BLOCKS:
 RULES (MUST ALL BE TRUE):
 1. Exactly ONE "r" block
 2. "r" NOT already at position (1, 3)
-3. Total occupied cells ≤ 18 (at least 2 cells empty)
-3.1. TOTAL occupied cells MUST BE EXACTLY 18 — CRITICAL (this overrides rule 3 above)
+3. TOTAL occupied cells MUST BE EXACTLY 18 (exactly 2 cells empty) — CRITICAL
 4. No overlaps, all blocks within bounds
 5. Puzzle MUST be solvable — red can reach (1, 3) by sliding blocks
 6. Solvable in EXACTLY the move range given in the user prompt (e.g. "30-40 moves" means solution length MUST be between 30 and 40). This overrides any default move count.
 
 OUTPUT FORMAT: Return ONLY a JSON array, no markdown, no explanation:
 [["r", 1, 1], ["v", 0, 0], ["h", 2, 4], ["y", 3, 2]]`;
-
-function extractJSON(text) {
-  text = String(text || '').trim();
-  try { return JSON.parse(text); } catch(_) {}
-  const s1 = text.indexOf('['), e1 = text.lastIndexOf(']');
-  if (s1 >= 0 && e1 > s1) {
-    try { return JSON.parse(text.substring(s1, e1 + 1)); } catch(_) {}
-  }
-  const s2 = text.indexOf('{'), e2 = text.lastIndexOf('}');
-  if (s2 >= 0 && e2 > s2) {
-    try {
-      const obj = JSON.parse(text.substring(s2, e2 + 1));
-      for (const k of ['pieces', 'level', 'puzzle', 'blocks']) {
-        if (Array.isArray(obj[k])) return obj[k];
-      }
-    } catch(_) {}
-  }
+function extractJSON(t){
+  t=String(t||'').trim();try{return JSON.parse(t)}catch(_){}
+  const s=t.indexOf('['),e=t.lastIndexOf(']');if(s>=0&&e>s){try{return JSON.parse(t.substring(s,e+1))}catch(_){}}
+  const s2=t.indexOf('{'),e2=t.lastIndexOf('}');
+  if(s2>=0&&e2>s2){try{const o=JSON.parse(t.substring(s2,e2+1));for(const k of['pieces','level','puzzle','blocks'])if(Array.isArray(o[k]))return o[k]}catch(_){}}
   throw new Error('Tidak bisa parse JSON dari AI');
 }
-
-async function aiGeneratePuzzle(cfg, ctx) {
-  const userPrompt = 'Generate a valid solvable puzzle for LEVEL ' + ctx.levelNumber + ' (difficulty: ' + ctx.difficulty + '). Return ONLY the JSON array.';
-
-  if (cfg.provider === 'gemini') {
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(cfg.model) + ':generateContent?key=' + encodeURIComponent(cfg.apiKey);
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: PUZZLE_SYSTEM_PROMPT }] },
-        contents: [{ parts: [{ text: userPrompt }] }],
-        generationConfig: { temperature: 1.0, responseMimeType: 'application/json', maxOutputTokens: 2048 }
-      })
-    });
-    if (!res.ok) {
-      const e = await res.text();
-      throw new Error('HTTP ' + res.status + ' — ' + e.substring(0, 100));
-    }
-    const data = await res.json();
-    const text = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text) || '';
-    return extractJSON(text);
+async function aiGenerate(c,ctx){
+  const up='Generate a valid solvable puzzle for LEVEL '+ctx.levelNumber+' (difficulty: '+ctx.difficulty+'). Return ONLY the JSON array.';
+  if(c.provider==='gemini'){
+    const d=await chk(await fetch(geminiURL(c),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({systemInstruction:{parts:[{text:PROMPT}]},contents:[{parts:[{text:up}]}],generationConfig:{temperature:1,responseMimeType:'application/json',maxOutputTokens:2048}})}));
+    const p=d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts;return extractJSON(p&&p[0]&&p[0].text);
   }
-
-  const url = openAIURLFor(cfg.provider, cfg.baseURL);
-  if (!url) throw new Error('Base URL kosong');
-  const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.apiKey };
-  if (cfg.provider === 'openrouter') {
-    headers['HTTP-Referer'] = location.origin;
-    headers['X-Title'] = 'Slide Master Editor';
-  }
-  const body = {
-    model: cfg.model,
-    messages: [
-      { role: 'system', content: PUZZLE_SYSTEM_PROMPT },
-      { role: 'user', content: userPrompt }
-    ],
-    temperature: 1.0,
-    max_tokens: 2048
-  };
-  if (cfg.provider === 'openai') body.response_format = { type: 'json_object' };
-  
-  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
-  if (!res.ok) {
-    const e = await res.text();
-    throw new Error('HTTP ' + res.status + ' — ' + e.substring(0, 100));
-  }
-  const data = await res.json();
-  const text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
-  return extractJSON(text);
+  const u=aiURL(c.provider,c.baseURL);if(!u)throw new Error('Base URL kosong');
+  const body={model:c.model,messages:[{role:'system',content:PROMPT},{role:'user',content:up}],temperature:1,max_tokens:2048};
+  if(c.provider==='openai')body.response_format={type:'json_object'};
+  const d=await chk(await fetch(u,{method:'POST',headers:oaHeaders(c),body:JSON.stringify(body)}));
+  return extractJSON(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content);
 }
-
-async function aiGenerateWithRetry(cfg, ctx, maxAttempts, onStatus) {
-  let lastErr;
-  for (let i = 0; i < maxAttempts; i++) {
-    try {
-      onStatus && onStatus('⏳ Percobaan ' + (i+1) + '/' + maxAttempts + '...');
-      const parsed = await aiGeneratePuzzle(cfg, ctx);
-      const v = validatePuzzle(parsed, true);
-      if (!v.ok) { lastErr = new Error(v.err); continue; }
-      const moves = solvePuzzle(parsed);
-      if (!moves) {
-        if (solvePuzzleTimedOut) {
-          return { pieces: parsed, moves: [], unverified: true };
-        }
-        lastErr = new Error('Puzzle tidak solvable');
-        continue;
-      }
-      if (moves.length === 0) { lastErr = new Error('Merah sudah di target'); continue; }
-      if (moves.length < 3) { lastErr = new Error('Terlalu mudah (' + moves.length + ' langkah)'); continue; }
-      return { pieces: parsed, moves };
-    } catch(e) {
-      lastErr = e;
-    }
+async function aiRetry(c,ctx,max,onSt){
+  let last;
+  for(let i=0;i<max;i++){
+    try{
+      onSt('Percobaan '+(i+1)+'/'+max+'...');
+      const p=await aiGenerate(c,ctx),v=validatePuzzle(p,true);
+      if(!v.ok){last=new Error(v.err);continue}
+      const mv=solvePuzzle(p);
+      if(!mv){if(timedOut)return{pieces:p,moves:[],unverified:true};last=new Error('Puzzle tidak solvable');continue}
+      if(!mv.length){last=new Error('Merah sudah di target');continue}
+      if(mv.length<3){last=new Error('Terlalu mudah ('+mv.length+' langkah)');continue}
+      return{pieces:p,moves:mv};
+    }catch(e){last=e}
   }
-  throw lastErr || new Error('Gagal generate');
+  throw last||new Error('Gagal generate');
 }
-
-document.getElementById('btnAIGenerate').onclick = async () => {
-  const btn = document.getElementById('btnAIGenerate');
-  const genStatus = document.getElementById('aiGenStatus');
-  const cfg = readAIForm();
-  if (!cfg.apiKey) {
-    genStatus.textContent = '⚠️ Isi API Key & Save dulu';
-    return;
-  }
-  if (placedPieces.length > 0 && !confirm('Ganti papan saat ini dengan puzzle AI?')) return;
-  
-  const levelNumber = editIndex >= 0 ? editIndex + 1 : savedLevels.length + 1;
-  const ctx = { levelNumber, difficulty: levelDifficulty(levelNumber) };
-  btn.disabled = true;
-  genStatus.textContent = '⏳ Level ' + levelNumber + ' · ' + ctx.difficulty + '...';
-  try {
-    const result = await aiGenerateWithRetry(cfg, ctx, 3, (msg) => { genStatus.textContent = msg; });
-    placedPieces = result.pieces.map(([t, x, y]) => ({ t, x, y }));
-    history = []; redoStack = [];
-    editIndex = -1;
-    renderBoard();
-    // Simpan config terakhir
-    aiConfig = cfg;
-    saveAIConfigStore();
-    const moveInfo = result.unverified ? '⚠ solvability unverified (timeout)' : result.moves.length + ' langkah solusi';
-    genStatus.textContent = '✅ ' + result.pieces.length + ' kotak, ' + moveInfo;
-    setTimeout(() => { aiModal.style.display = 'none'; }, 600);
-    showToast("✅ Puzzle AI siap!", "success");
-  } catch(e) {
-    genStatus.textContent = '❌ ' + (e.message || 'Gagal').substring(0, 100);
-    showToast("Gagal: " + (e.message || 'Error'), "error");
-  } finally {
-    btn.disabled = false;
-  }
+$('btnAIGenerate').onclick=async()=>{
+  const b=$('btnAIGenerate'),c=readAI();
+  if(!c.apiKey){setSt('aiGenStatus','err','Isi API Key & Simpan dulu');return}
+  if(pcs.length&&!await ask('Ganti papan saat ini dengan puzzle AI?'))return;
+  const n=edit>=0?edit+1:lv.length+1,ctx={levelNumber:n,difficulty:levelDifficulty(n)};
+  b.disabled=true;setSt('aiGenStatus','wait','Level '+n+' · '+ctx.difficulty+'...');
+  try{
+    const r=await aiRetry(c,ctx,3,m=>setSt('aiGenStatus','wait',m));
+    pcs=r.pieces.map(([t,x,y])=>({t,x,y}));hist=[];redo=[];edit=-1;renderBoard();ai=c;saveAI();
+    setSt('aiGenStatus','ok',r.pieces.length+' kotak, '+(r.unverified?'solvability belum terverifikasi (timeout)':r.moves.length+' langkah solusi'));
+    setTimeout(()=>shut('aiModal'),600);toast('Puzzle AI siap!','success');
+  }catch(e){setSt('aiGenStatus','err',(e.message||'Gagal').substring(0,100));toast('Gagal: '+(e.message||'Error'),'error')}
+  finally{b.disabled=false}
 };
 
-// === TOAST ===
-let toastTimeout;
-function showToast(msg, type) {
-  type = type || 'info';
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'show ' + type;
-  clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => { t.className = ''; }, 2800);
-}
+// === SHORTCUT (Ctrl+Z / Ctrl+Y) ===
+document.addEventListener('keydown',e=>{
+  if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||!(e.ctrlKey||e.metaKey)||document.body.classList.contains('lock'))return;
+  if(e.key==='z'){e.preventDefault();$('btnUndo').click()}else if(e.key==='y'){e.preventDefault();$('btnRedo').click()}
+});
 
-// === PWA SW ===
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js', { scope: './' }).catch(() => {});
-  });
-}
+// === NAV SHEETS ===
+$('navSolve').onclick=()=>open('solveSheet');$('navData').onclick=()=>open('dataSheet');
+['btnSolve','btnSolveMoves'].forEach(id=>$(id).addEventListener('click',()=>shut('solveSheet')));
+['btnImport','btnExport'].forEach(id=>$(id).addEventListener('click',()=>shut('dataSheet')));
 
-// === START ===
+// === PWA ===
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{}));
 init();
 </script>
 </body>
