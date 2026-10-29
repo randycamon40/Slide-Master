@@ -1418,12 +1418,7 @@ async function forceUpdate() {
     const data = await res.json();
     if(!Array.isArray(data) || data.length === 0) throw new Error('Format level.json tidak valid');
     LEVELS = data;
-    if(isAdmin) {
-      try {
-        const custom = JSON.parse(localStorage.getItem('slide_master_levels') || '[]');
-        if(Array.isArray(custom) && custom.length > 0) LEVELS = custom;
-      } catch(_) {}
-    }
+    try { localStorage.setItem('slide_master_levels', JSON.stringify(data)); } catch(_) {}
     if('serviceWorker' in navigator) {
       try {
         const regs = await navigator.serviceWorker.getRegistrations();
