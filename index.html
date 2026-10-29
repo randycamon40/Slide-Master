@@ -758,6 +758,7 @@ function win() {
   const r = rating(t);
   const ch = S.mode === 'chal';
   const st = S.assist ? 0 : S.moves <= S.par ? 3 : S.moves <= S.par * 1.5 ? 2 : 1;
+  let earnedXp = 0;
   
   [262, 330, 392, 523].forEach((f, i) => tone(f, .25, i*.15, 'triangle'));
   vib([50, 30, 50]);
@@ -766,7 +767,11 @@ function win() {
   if(!S.assist) {
     const o = P.best[S.lvl] || {};
     P.best[S.lvl] = { m: Math.min(o.m || 1e9, S.moves), t: Math.min(o.t || 1e9, t), s: Math.max(o.s || 0, st) };
-    P.xp += 100 + (ch && r === 'SUPER' ? 100 : 0);
+    
+    const baseXp = Math.min(100, S.lvl + 1);
+    earnedXp = baseXp + (ch && r === 'SUPER' ? 50 : 0);
+    P.xp += earnedXp;
+    
     P.total++;
     if(S.hintUses === 0) {
       P.streak = (P.streak || 0) + 1;
@@ -781,7 +786,8 @@ function win() {
     `<h2>${'★'.repeat(st) + '☆'.repeat(3-st)}</h2>
      <div>Optimal: ${S.par} moves, You: ${S.moves} (+${Math.max(0, S.moves - S.par)})<br>
      Time ${t.toFixed(1)}s${ch ? ' · ' + (t > 120 ? 'Fail' : r) : ''}<br>
-     XP ${P.xp} · Solved ${P.total}</div>`,
+     <span style="color:var(--yel);font-weight:800;">+${earnedXp} XP</span> · Total XP ${P.xp}<br>
+     Solved ${P.total}</div>`,
     [['Replay', () => load(S.lvl)], ...(S.lvl + 1 < LEVELS.length ? [['Next Level', () => load(S.lvl + 1)]] : []), ['Share', share], ['Menu', goLobby]]
   ), 900);
 }
