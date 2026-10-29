@@ -103,6 +103,16 @@ button:disabled { opacity: 0.4; pointer-events: none; }
 #toast.error { background: var(--danger); }
 #toast.success { background: var(--primary); }
 #toast.info { background: var(--info); }
+
+/* Animasi Solve Moves */
+#animBar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #222; padding: 10px 16px; border-radius: 30px; box-shadow: 0 6px 24px rgba(0,0,0,0.7), 0 0 0 2px rgba(255,255,255,0.1); z-index: 150; display: none; align-items: center; gap: 10px; color: #fff; font-size: 13px; font-weight: 800; white-space: nowrap; }
+#animBar.active { display: flex; }
+#animBar button { flex: initial; padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 20px; box-shadow: none; }
+#animPause { background: #444; color: #fff; }
+#animStop { background: #c62828; color: #fff; }
+#grid.anim-mode .piece { transition: left 0.32s cubic-bezier(.4,.2,.3,1), top 0.32s cubic-bezier(.4,.2,.3,1); }
+.piece.anim-moving { outline: 3px solid #fff; outline-offset: -3px; z-index: 10; filter: brightness(1.25); }
+.piece.anim-win { outline: 3px solid #00E676; outline-offset: -3px; box-shadow: 0 0 0 3px rgba(0,230,118,0.5), 0 0 30px rgba(0,230,118,0.9); z-index: 10; }
 </style>
 </head>
 <body>
@@ -216,6 +226,12 @@ button:disabled { opacity: 0.4; pointer-events: none; }
     <div id="movesList" style="max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:2px;"></div>
     <button class="btn-primary" id="btnCloseMovesBottom">Tutup</button>
   </div>
+</div>
+
+<div id="animBar">
+  <span id="animLabel">▶ 0/0</span>
+  <button id="animPause">⏸ Pause</button>
+  <button id="animStop">✕ Stop</button>
 </div>
 
 <div id="toast">Pesan</div>
@@ -435,9 +451,10 @@ function handlePlace(e) {
 // === RENDER ===
 function renderBoard() {
   document.querySelectorAll('.piece').forEach(el => el.remove());
-  placedPieces.forEach(p => {
+  placedPieces.forEach((p, idx) => {
     const div = document.createElement('div');
     div.className = 'piece t_' + p.t;
+    div.dataset.idx = idx;
     const w = DIM[p.t][0], h = DIM[p.t][1];
     div.style.width = `calc(${w} * var(--cell-w) + ${w - 1} * var(--gap))`;
     div.style.height = `calc(${h} * var(--cell-h) + ${h - 1} * var(--gap))`;
@@ -719,10 +736,115 @@ document.getElementById('btnSolveMoves').onclick = () => {
     } else if (moves.length === 0) {
       showToast("✓ Merah sudah di target", "success");
     } else {
-      showSolveMoves(moves, arr);
+      animateSolveMoves(moves, arr);
     }
   }, 50);
 };
+
+let animState = null;
+
+function stopAnim() {
+  if (!animState) return;
+  clearTimeout(animState.timer);
+  const original = animState.original;
+  animState = null;
+  placedPieces = original.map(p => ({ ...p }));
+  document.getElementById('grid').classList.remove('anim-mode');
+  document.getElementById('animBar').classList.remove('active');
+  document.querySelectorAll('.cell').forEach(c => c.style.pointerEvents = '');
+  document.querySelectorAll('.tool-btn').forEach(b => b.style.pointerEvents = '');
+  ['btnSolve','btnSolveMoves','btnSave','btnClear','btnUndo','btnRedo','btnImport','btnExport','btnAI'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = false;
+  });
+  renderBoard();
+}
+
+function updateAnimBar() {
+  if (!animState) {
+    document.getElementById('animBar').classList.remove('active');
+    return;
+  }
+  document.getElementById('animBar').classList.add('active');
+  const icon = animState.paused ? '⏸' : '▶';
+  const total = animState.moves.length;
+  const current = Math.min(animState.idx, total);
+  document.getElementById('animLabel').textContent = icon + ' ' + current + '/' + total;
+}
+
+function playNextAnimMove() {
+  if (!animState || animState.paused) return;
+
+  if (animState.idx >= animState.moves.length) {
+    const redIdx = placedPieces.findIndex(p => p.t === 'r');
+    if (redIdx >= 0) {
+      const redEl = document.querySelector('#grid .piece[data-idx="' + redIdx + '"]');
+      if (redEl) redEl.classList.add('anim-win');
+    }
+    document.getElementById('animLabel').textContent = '✅ Selesai — ' + animState.moves.length + ' langkah';
+    animState.timer = setTimeout(() => stopAnim(), 1600);
+    return;
+  }
+
+  const [pieceIdx, dx, dy] = animState.moves[animState.idx];
+  const piece = placedPieces[pieceIdx];
+  if (!piece) { stopAnim(); return; }
+
+  piece.x += dx;
+  piece.y += dy;
+
+  const el = document.querySelector('#grid .piece[data-idx="' + pieceIdx + '"]');
+  if (el) {
+    el.style.left = 'calc(var(--pad) + ' + piece.x + ' * (var(--cell-w) + var(--gap)))';
+    el.style.top = 'calc(var(--pad) + ' + piece.y + ' * (var(--cell-h) + var(--gap)))';
+    el.classList.add('anim-moving');
+    setTimeout(() => { if (el) el.classList.remove('anim-moving'); }, 300);
+  }
+
+  animState.idx++;
+  updateAnimBar();
+  animState.timer = setTimeout(playNextAnimMove, 400);
+}
+
+function animateSolveMoves(moves, arr) {
+  if (animState) stopAnim();
+
+  const original = placedPieces.map(p => ({ ...p }));
+  renderBoard();
+
+  animState = { moves: moves, original: original, idx: 0, paused: false, timer: null };
+
+  document.getElementById('grid').classList.add('anim-mode');
+  document.getElementById('animPause').textContent = '⏸ Pause';
+
+  document.querySelectorAll('.cell').forEach(c => c.style.pointerEvents = 'none');
+  document.querySelectorAll('.tool-btn').forEach(b => b.style.pointerEvents = 'none');
+  ['btnSolve','btnSolveMoves','btnSave','btnClear','btnUndo','btnRedo','btnImport','btnExport','btnAI'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = true;
+  });
+
+  updateAnimBar();
+  animState.timer = setTimeout(playNextAnimMove, 400);
+}
+
+function togglePauseAnim() {
+  if (!animState) return;
+  if (animState.idx >= animState.moves.length) return;
+  animState.paused = !animState.paused;
+  const btn = document.getElementById('animPause');
+  if (animState.paused) {
+    btn.textContent = '▶ Resume';
+    clearTimeout(animState.timer);
+  } else {
+    btn.textContent = '⏸ Pause';
+    playNextAnimMove();
+  }
+  updateAnimBar();
+}
+
+document.getElementById('animPause').onclick = togglePauseAnim;
+document.getElementById('animStop').onclick = stopAnim;
 
 document.getElementById('btnCloseMovesModal').onclick = () => document.getElementById('movesModal').style.display = 'none';
 document.getElementById('btnCloseMovesBottom').onclick = () => document.getElementById('movesModal').style.display = 'none';
