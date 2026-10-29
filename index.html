@@ -1046,6 +1046,12 @@ function ov(html, btns) {
 
 function setLobbyMode(m, persist) {
   if(m === 'learn') m = 'classic';
+  if (persist && S.mode !== m) {
+    safeRmSS();
+    S.chalActive = false;
+    $('#bC').classList.remove('on');
+    if ($('#bPlay')) $('#bPlay').textContent = '▶ PLAY GAME';
+  }
   S.mode = m;
   if(persist) { P.mode = m; save(); }
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
@@ -1078,6 +1084,8 @@ function goLobby() {
   $('#lobby').classList.remove('lobby-exit');
   updateLobbyStats();
   setLobbyMode(S.mode, false);
+  if (safeGetSS() || P.lvl > 0) $('#bPlay').textContent = '▶ RESUME GAME';
+  else $('#bPlay').textContent = '▶ PLAY GAME';
 }
 
 function updateLobbyStats() {
