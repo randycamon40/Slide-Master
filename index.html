@@ -172,6 +172,12 @@ button.on { outline: 2px solid var(--yel); box-shadow: 0 0 12px var(--yel); }
 .boot { animation: boot .5s both; }
 @keyframes boot { from { opacity: 0; filter: brightness(3); } }
 .confetti { position: fixed; width: 10px; height: 16px; top: -20px; z-index: 999; animation: fall linear forwards; pointer-events: none; border-radius: 2px; }
+.vol-row { display: flex; flex-direction: column; gap: 6px; text-align: left; margin-bottom: 4px; }
+.vol-row label { font-size: 11px; color: #ccc; font-weight: 700; display: flex; justify-content: space-between; }
+input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #333; border-radius: 3px; border: 1px solid #000; }
+input[type=range]::-webkit-slider-thumb { height: 16px; width: 16px; border-radius: 50%; background: var(--yel); cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 0 8px var(--yel); }
+input[type=range]:focus { outline: none; }
 
 #tut { position: absolute; inset: 0; background: rgba(5,5,10,0.85); backdrop-filter: blur(10px); z-index: 500; display: flex; align-items: center; justify-content: center; animation: ovIn .3s ease-out; padding: 20px; box-sizing: border-box; }
 #tut[hidden] { display: none; }
@@ -335,6 +341,9 @@ if(P.chalRecords === undefined) P.chalRecords = [];
 if(P.hintTokens === undefined) P.hintTokens = 0;
 if(P.streak === undefined) P.streak = 0;
 if(P.tutDone === undefined) P.tutDone = false;
+if(P.volMusic === undefined) P.volMusic = 100;
+if(P.volSfx === undefined) P.volSfx = 100;
+if(P.volUi === undefined) P.volUi = 100;
 if(!P.unlockedThemes) {
   P.unlockedThemes = ['black'];
   const _cur = themes[P.theme || 0];
@@ -569,18 +578,125 @@ function rating(t) {
 }
 
 let ac;
-function tone(f, d=.09, at=0, ty='square') {
+function tone(f, d=.09, at=0, ty='square', cat='ui') {
   if(!S.snd) return;
+  let vol = 1;
+  if(cat === 'ui') vol = (P.volUi !== undefined ? P.volUi : 100) / 100;
+  else if(cat === 'sfx') vol = (P.volSfx !== undefined ? P.volSfx : 100) / 100;
+  else if(cat === 'music') vol = (P.volMusic !== undefined ? P.volMusic : 100) / 100;
+  if(vol <= 0) return;
+  
   try {
     ac = ac || new (window.AudioContext || window.webkitAudioContext)();
     const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + at;
     o.type = ty; o.frequency.value = f;
-    g.gain.setValueAtTime(.07, t);
+    g.gain.setValueAtTime(0.4 * vol, t);
     g.gain.exponentialRampToValueAtTime(.001, t + d);
     o.connect(g); g.connect(ac.destination);
     o.start(t); o.stop(t + d);
   } catch(e) {}
 }
+
+function playSlideSound() {
+  if(!S.snd) return;
+  let vol = (P.volSfx !== undefined ? P.volSfx : 100) / 100;
+  if(vol <= 0) return;
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const t = ac.currentTime;
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, t);
+    osc.frequency.exponentialRampToValueAtTime(100, t + 0.04);
+    gain.gain.setValueAtTime(0.6 * vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
+    osc.connect(gain);
+    gain.connect(ac.destination);
+    osc.start(t);
+    osc.stop(t + 0.06);
+    vib(15);
+  } catch(e) {}
+}
+
+function playWinSound() {
+  if(!S.snd) return;
+  let vol = (P.volSfx !== undefined ? P.volSfx : 100) / 100;
+  if(vol <= 0) return;
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const t = ac.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    notes.forEach((f, i) => {
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = f;
+      gain.gain.setValueAtTime(0, t + i * 0.1);
+      gain.gain.linearRampToValueAtTime(0.6 * vol, t + i * 0.1 + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + i * 0.1 + 0.5);
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.start(t + i * 0.1);
+      osc.stop(t + i * 0.1 + 0.6);
+    });
+  } catch(e) {}
+}
+
+const BGM_SEQ = [
+  { f: 261.63, d: 0.4 }, { f: 329.63, d: 0.4 }, { f: 392.00, d: 0.4 }, { f: 523.25, d: 0.8 },
+  { f: 440.00, d: 0.4 }, { f: 349.23, d: 0.4 }, { f: 392.00, d: 0.4 }, { f: 329.63, d: 0.8 },
+  { f: 261.63, d: 0.4 }, { f: 329.63, d: 0.4 }, { f: 392.00, d: 0.4 }, { f: 523.25, d: 0.8 },
+  { f: 440.00, d: 0.4 }, { f: 392.00, d: 0.4 }, { f: 329.63, d: 0.4 }, { f: 261.63, d: 0.8 }
+];
+let bgmIndex = 0;
+let bgmTimeout = null;
+
+function playBGM() {
+  if (!S.snd || P.volMusic <= 0 || !ac) return;
+  const note = BGM_SEQ[bgmIndex];
+  const vol = (P.volMusic / 100) * 0.2;
+  
+  if (vol > 0) {
+    const t = ac.currentTime;
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = note.f;
+    
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(vol, t + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + note.d);
+    
+    osc.connect(gain);
+    gain.connect(ac.destination);
+    osc.start(t);
+    osc.stop(t + note.d + 0.1);
+  }
+  
+  bgmIndex = (bgmIndex + 1) % BGM_SEQ.length;
+  const nextDelay = note.d * 1000 + 100;
+  bgmTimeout = setTimeout(playBGM, nextDelay);
+}
+
+function updateBGM() {
+  clearTimeout(bgmTimeout);
+  if (S.snd && P.volMusic > 0) {
+    if (!ac) {
+      try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    }
+    if (ac && ac.state === 'suspended') ac.resume();
+    playBGM();
+  }
+}
+
+document.addEventListener('pointerdown', () => {
+  if (!ac) {
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  if (ac && ac.state === 'suspended') ac.resume();
+  if (S.snd && P.volMusic > 0 && !bgmTimeout) updateBGM();
+}, { once: true });
 const vib = p => navigator.vibrate && navigator.vibrate(p);
 
 let introDelayT = null, introRemoveT = null;
@@ -658,7 +774,7 @@ function move(id, dx, dy) {
   if(S.done) return false;
   const b = S.bl[id];
   if(!can(b, dx, dy, occ(S.bl))) {
-    tone(100, .08); return false;
+    tone(100, .08, 0, 'square', 'sfx'); return false;
   }
   if(!S.t0) S.t0 = Date.now();
   inner.querySelectorAll('.arr').forEach(a => a.remove());
@@ -667,7 +783,7 @@ function move(id, dx, dy) {
   S.hist.push([id, dx, dy]);
   S.redo = [];
   S.moves++;
-  tone(200, .06); vib(20);
+  playSlideSound();
   place();
   
   const _r = S.bl.find(b => b.t === 'r'); if(_r && _r.x === 1 && _r.y === 3) { win(); return true; }
@@ -761,7 +877,7 @@ function win() {
   const st = S.assist ? 0 : S.moves <= S.par ? 3 : S.moves <= S.par * 1.5 ? 2 : 1;
   let earnedXp = 0;
   
-  [262, 330, 392, 523].forEach((f, i) => tone(f, .25, i*.15, 'triangle'));
+  playWinSound();
   vib([50, 30, 50]);
   if(inner.children[0]) inner.children[0].classList.add('win');
   
@@ -818,10 +934,10 @@ function endChallenge(completed) {
   P.chalRecords = P.chalRecords.slice(0, 20);
   save();
   if(completed) {
-    tone(660, .15, 0, 'triangle');
-    tone(880, .2, .15, 'triangle');
+    tone(660, .15, 0, 'triangle', 'sfx');
+    tone(880, .2, .15, 'triangle', 'sfx');
   } else {
-    tone(100, .4);
+    tone(100, .4, 0, 'square', 'sfx');
   }
   setTimeout(() => {
     ov(
@@ -1051,6 +1167,50 @@ function ov(html, btns) {
   o.hidden = false;
 }
 
+function showConfirm(title, msg, onOk, onCancel) {
+  const existing = document.querySelector('#appConfirm');
+  if (existing) existing.remove();
+
+  const wrap = document.createElement('div');
+  wrap.id = 'appConfirm';
+  wrap.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;opacity:0;transition:opacity 0.2s;';
+  
+  wrap.innerHTML = `
+    <div style="background:#2a2a2a;border:1px solid #444;border-radius:16px;padding:24px;width:100%;max-width:320px;box-shadow:0 10px 30px rgba(0,0,0,0.5);transform:scale(0.95);transition:transform 0.2s;">
+      <h3 style="margin:0 0 10px;font-size:18px;font-weight:800;color:#eee;">${title}</h3>
+      <p style="margin:0 0 20px;font-size:13px;color:#ccc;line-height:1.5;white-space:pre-wrap;">${msg}</p>
+      <div style="display:flex;gap:10px;">
+        <button id="cfCancel" style="flex:1;padding:12px;background:#444;color:#fff;border:1px solid #666;box-shadow:0 4px 0 #111;border-radius:10px;font-weight:bold;">Batal</button>
+        <button id="cfOk" style="flex:1;padding:12px;background:linear-gradient(180deg,#ff6a70,#c91b22);color:#fff;border:1px solid #ff8a8e;box-shadow:0 4px 0 #661100;border-radius:10px;font-weight:bold;">Lanjut</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  
+  void wrap.offsetWidth;
+  wrap.style.opacity = '1';
+  wrap.querySelector('div').style.transform = 'scale(1)';
+  
+  const close = (isOk) => {
+    wrap.style.opacity = '0';
+    wrap.querySelector('div').style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      wrap.remove();
+      if (isOk && onOk) onOk();
+      if (!isOk && onCancel) onCancel();
+    }, 200);
+  };
+  
+  wrap.querySelector('#cfOk').onclick = () => close(true);
+  wrap.querySelector('#cfCancel').onclick = () => close(false);
+}
+
+function askConfirm(title, msg) {
+  return new Promise(resolve => {
+    showConfirm(title, msg, () => resolve(true), () => resolve(false));
+  });
+}
+
 function setLobbyMode(m, persist) {
   if(m === 'learn') m = 'classic';
   if (persist && S.mode !== m) {
@@ -1128,7 +1288,7 @@ setInterval(() => {
     if(_tf) _tf.style.width = Math.min(100, Math.max(0, (S.chalTimeLeft/120)*100)) + '%';
     if(S.chalTimeLeft < 10 && Math.ceil(S.chalTimeLeft) !== S.tk) {
       S.tk = Math.ceil(S.chalTimeLeft);
-      tone(800, .03);
+      tone(800, .03, 0, 'square', 'sfx');
       $('#msg').classList.add('warn');
     }
     return;
@@ -1143,11 +1303,11 @@ setInterval(() => {
     if(r >= 10 && !S.auto) { const _rr = rating(e); if($('#msg').textContent !== _rr) { $('#msg').textContent = _rr; $('#msg').style.color = ''; $('#msg').classList.remove('warn'); } }
     if(r <= 0) {
       S.done = true;
-      tone(100, .4);
+      tone(100, .4, 0, 'square', 'sfx');
       ov('<h2>Time up</h2>', [['Retry', () => load(S.lvl)]]);
     } else if(r < 10 && (r|0) !== S.tk) {
       S.tk = r|0;
-      tone(800, .03);
+      tone(800, .03, 0, 'square', 'sfx');
       $('#msg').classList.add('warn');
     }
   } else {
@@ -1243,12 +1403,13 @@ $('#bL').onclick = () => {
   updateHintButton();
   $('#msg').textContent = '⏳ Mencari petunjuk...';
   $('#msg').style.color = '';
-  tone(520, .1); vib(15);
+  tone(520, .1, 0, 'square', 'sfx'); vib(15);
   showHint();
 };
-$('#bC').onclick = () => {
+$('#bC').onclick = async () => {
   if(S.chalActive) {
-    if(!confirm('Keluar dari Challenge? Skor sekarang akan hilang.')) return;
+    const ok = await askConfirm('Keluar dari Challenge?', 'Skor sekarang akan hilang.');
+    if(!ok) return;
     S.chalActive = false;
     S.mode = 'classic';
     P.mode = 'classic';
@@ -1318,6 +1479,17 @@ $('#bLevels').onclick = openLevelSelect;
 
 document.querySelectorAll('.mode-btn').forEach(b => b.onclick = () => setLobbyMode(b.dataset.mode, true));
 setLobbyMode(S.mode, false);
+
+// Suara Tombol UI (Lobby & Pop-up)
+const playClickSound = () => { 
+  if(S.snd) tone(600, .05, 0, 'triangle'); 
+};
+document.querySelector('#lobby').addEventListener('pointerdown', e => { 
+  if(e.target.closest('button')) playClickSound(); 
+});
+document.querySelector('#ov').addEventListener('pointerdown', e => { 
+  if(e.target.closest('button')) playClickSound(); 
+});
 $('#bAch').onclick = showAchievements;
 $('#bShop').onclick = showShop;
 
@@ -1463,6 +1635,20 @@ $('#bSettings').onclick = () => {
   o.innerHTML = `<h2 style="font-size:24px;letter-spacing:2px;margin-bottom:10px;">SETTINGS</h2>
     <div style="display:flex;flex-direction:column;gap:12px;width:220px;margin:0 auto;">
       <button id="setSnd" style="padding:14px;font-size:14px;font-weight:800;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:linear-gradient(180deg,#444,#222);color:#fff;box-shadow:0 5px 0 #111;">Sound: ${S.snd ? 'ON' : 'OFF'}</button>
+      <div id="volGroup" style="display:${S.snd ? 'flex' : 'none'};flex-direction:column;gap:10px;padding:12px;background:rgba(0,0,0,0.2);border-radius:12px;border:1px solid #333;margin-bottom:4px;">
+        <div class="vol-row">
+          <label>Musik (<span id="volMusicVal">${P.volMusic||100}</span>%)</label>
+          <input type="range" id="volMusic" min="0" max="100" value="${P.volMusic||100}">
+        </div>
+        <div class="vol-row">
+          <label>Efek Game (<span id="volSfxVal">${P.volSfx||100}</span>%)</label>
+          <input type="range" id="volSfx" min="0" max="100" value="${P.volSfx||100}">
+        </div>
+        <div class="vol-row">
+          <label>Tombol UI (<span id="volUiVal">${P.volUi||100}</span>%)</label>
+          <input type="range" id="volUi" min="0" max="100" value="${P.volUi||100}">
+        </div>
+      </div>
       <button id="setTheme" style="padding:14px;font-size:14px;font-weight:800;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:linear-gradient(180deg,#444,#222);color:#fff;box-shadow:0 5px 0 #111;">Theme: ${themes[S.theme].toUpperCase()}</button>
       <button id="setTut" style="padding:14px;font-size:14px;font-weight:800;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:linear-gradient(180deg,#444,#222);color:#fff;box-shadow:0 5px 0 #111;">LIHAT TUTORIAL</button>
       ${isAdmin ? '<button id="setForceUpd" style="padding:14px;font-size:13px;font-weight:900;border-radius:12px;border:1px solid rgba(92,255,166,0.5);background:linear-gradient(180deg,#2a5a3a,#0a2a1a);color:#5cffa6;box-shadow:0 5px 0 #001a0a;letter-spacing:1px;">FORCE UPDATE LEVEL</button>' : ''}
@@ -1470,31 +1656,62 @@ $('#bSettings').onclick = () => {
     </div>`;
   const s = o.querySelector('#setSnd');
   const t = o.querySelector('#setTheme');
-  s.onclick = () => { S.snd = !S.snd; s.textContent = 'Sound: ' + (S.snd ? 'ON' : 'OFF'); tone(440); };
+  const volGroup = o.querySelector('#volGroup');
+  s.onclick = () => { 
+    S.snd = !S.snd; 
+    s.textContent = 'Sound: ' + (S.snd ? 'ON' : 'OFF'); 
+    volGroup.style.display = S.snd ? 'flex' : 'none';
+    if (S.snd) updateBGM();
+    else clearTimeout(bgmTimeout);
+    tone(440); 
+  };
+
+  o.querySelector('#volMusic').oninput = (e) => {
+    P.volMusic = parseInt(e.target.value);
+    o.querySelector('#volMusicVal').textContent = P.volMusic;
+    updateBGM();
+    save();
+  };
+
+  o.querySelector('#volSfx').oninput = (e) => {
+    P.volSfx = parseInt(e.target.value);
+    o.querySelector('#volSfxVal').textContent = P.volSfx;
+    save();
+  };
+  o.querySelector('#volSfx').onchange = () => { playSlideSound(); };
+
+  o.querySelector('#volUi').oninput = (e) => {
+    P.volUi = parseInt(e.target.value);
+    o.querySelector('#volUiVal').textContent = P.volUi;
+    save();
+  };
+  o.querySelector('#volUi').onchange = () => { tone(600, .05, 0, 'triangle'); };
   t.onclick = () => { S.theme = nextUnlockedTheme(); document.documentElement.dataset.theme = themes[S.theme]; P.theme = S.theme; save(); t.textContent = 'Theme: ' + themes[S.theme].toUpperCase(); };
   o.querySelector('#setTut').onclick = () => { o.hidden = true; showTutorial(); };
   const _fuBtn = o.querySelector('#setForceUpd');
   if(_fuBtn) _fuBtn.onclick = () => { o.hidden = true; forceUpdate(); };
   const _resetBtn = o.querySelector('#setReset');
   if(_resetBtn) _resetBtn.onclick = () => {
-    if(!confirm('⚠️ PERINGATAN ⚠️\nSemua progres, XP, tema, dan pencapaian akan dihapus permanen. Lanjutkan?')) return;
-    if(!confirm('Apakah kamu 100% yakin ingin mereset semua data?')) return;
-    try {
-      localStorage.removeItem('ss');
-      localStorage.removeItem('ss_state');
-      localStorage.removeItem('ss_admin');
-      localStorage.removeItem('slide_master_levels');
-      sessionStorage.clear();
-      if('caches' in window) {
-        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
+    showConfirm('⚠️ PERINGATAN ⚠️', 'Semua progres, XP, tema, dan pencapaian akan dihapus permanen. Lanjutkan?', () => {
+      showConfirm('Konfirmasi Akhir', 'Apakah kamu 100% yakin ingin mereset semua data?', () => {
+        try {
+          localStorage.removeItem('ss');
+          localStorage.removeItem('ss_state');
+          localStorage.removeItem('ss_admin');
+          localStorage.removeItem('slide_master_levels');
+          sessionStorage.clear();
+          if('caches' in window) {
+            caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
+              window.location.reload();
+            });
+          } else {
+            window.location.reload();
+          }
+        } catch(e) {
           window.location.reload();
-        });
-      } else {
-        window.location.reload();
-      }
-    } catch(e) {
-      window.location.reload();
-    }
+        }
+      });
+    });
   };
   const c = document.createElement('button');
   c.textContent = 'CLOSE';
@@ -1617,10 +1834,10 @@ if ('serviceWorker' in navigator) {
           nw.addEventListener('statechange', () => {
             if (nw.state === 'installed' && navigator.serviceWorker.controller) {
               // Ada update — reload sekali agar versi terbaru dipakai
-              if (confirm('Versi baru Slide Master tersedia. Muat ulang sekarang?')) {
+              showConfirm('Update Tersedia', 'Versi baru Slide Master tersedia. Muat ulang sekarang?', () => {
                 nw.postMessage({ type: 'SKIP_WAITING' });
                 window.location.reload();
-              }
+              });
             }
           });
         });
